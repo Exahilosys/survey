@@ -1,0 +1,29 @@
+# Showcase
+
+A simple library for creating beautiful interactive prompts.
+
+<img src="images/showcase.gif" width="57.5%">
+
+```py
+import survey
+
+name = survey.input('Username: ')
+password = survey.password('Password: ')
+actions = ('Call', 'Text', 'Exit')
+index = survey.select(actions, 'Chose an action: ')
+# if index == 0: elif index == 1: else: ...
+contacts = ('Mom', 'Daniel', 'Cat', 'Alice', 'John', 'Sis', 'Lawyer', 'Robert')
+indexes = survey.select(contacts, 'Select recipients: ', multi = True)
+message = survey.input('Type messsage: ', multi = True)
+confirm = survey.confirm(f'Message is {len(message)} characters long. Send? ', default = True)
+```
+
+# Installing
+
+```
+  pip3 install survey
+```
+
+# Links
+
+- Greatly inspired by [AlecAivazis's GoLang](https://github.com/AlecAivazis/survey) library.

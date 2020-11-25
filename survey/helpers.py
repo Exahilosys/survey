@@ -25,9 +25,13 @@ class Handle(wrapio.Handle):
         return fail
 
 
-def paint(value, color, null = '\x1b[0m'):
+_null_color = '\x1b[0m'
+
+def paint(value, color, null = _null_color):
 
     return color + value + null
+
+paint.null = _null_color
 
 
 class seq:

@@ -731,7 +731,7 @@ class MultiLineEditor(Machine, Originful):
             self._cursor.last(min(limit, size))
         else:
             index = self._index + size
-            limit = self._shown - self._among
+            limit = self._shown - self._among - 1
             self._cursor.next(min(limit, size))
 
         old = self._sub
@@ -1056,7 +1056,7 @@ class Select(Machine, Originful):
             limit = self._among
             self._cursor.last(min(limit, size))
         else:
-            limit = self._shown - self._among
+            limit = self._shown - self._among - 1
             self._cursor.next(min(limit, size))
 
         self._index = index

@@ -1,5 +1,3 @@
-# Showcase
-
 A simple library for creating beautiful interactive prompts.
 
 <img src="images/showcase.gif" width="57.5%">
@@ -18,12 +16,21 @@ message = survey.input('Type messsage: ', multi = True)
 confirm = survey.confirm(f'Message is {len(message)} characters long. Send? ', default = True)
 ```
 
-# Installing
+## Features
+
+- **Pythonic**: friendly interface wrapped around simple functions.
+- **Lightweight**: independent of any other prompt or visual libraries.
+- **Adaptable**: works with any string formatting and window size.
+- **Extensive**: packed with tweaks and features for any situation.
+
+## Installing
 
 ```
   pip3 install survey
 ```
 
-# Links
+## Links
 
 - Greatly inspired by [AlecAivazis's GoLang](https://github.com/AlecAivazis/survey) library.
+
+Suggestions and contributions are greatly appreciated!

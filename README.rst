@@ -34,6 +34,7 @@ Installing
 Links
 =====
 
+- Check out the `documentation <https://survey.readthedocs.io>`_ for more details.
 - Greatly inspired by `AlecAivazis's GoLang <https://github.com/AlecAivazis/survey>`_ library.
 
 Suggestions and contributions are greatly appreciated!

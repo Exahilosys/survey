@@ -1,12 +1,12 @@
 Welcome to SURVEY
 =================
 
-Building beautiful interactive prompts.
+A simple library for creating beautiful interactive prompts.
 
 Installation
     .. code-block:: bash
 
-        $ pip3 install aiodata
+        $ pip3 install survey
 
 Check out the :ref:`Quickstart` guide to jump right in.
 

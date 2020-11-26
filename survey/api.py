@@ -193,7 +193,7 @@ def edit(prompt = None,
          multi = False):
 
     """
-    Await and return ``(input, display)`` from user.
+    Await and return input from user.
 
     :param str prompt:
         Persistent prompt shown before input.
@@ -317,7 +317,7 @@ def select(options,
 
     """
     Draw a menu of options. Traverse using **↑** and **↓** keys. Type to filter.
-    Enter to submit.
+    Enter to submit. Return index(es) of option(s).
 
     This should not be used directly for most purposes.
 

@@ -23,7 +23,7 @@ def update(value):
 def input(*args, color = _colors.info, **kwargs):
 
     """
-    Same as :func:`api.edit`, but responds immediately ``color``.
+    Await and return input. Respond immediately ``color`` (light blue).
 
     Other arguments are passed to :func:`api.edit`.
 
@@ -43,9 +43,9 @@ def input(*args, color = _colors.info, **kwargs):
 def password(*args, rune = '*', color = '\x1b[90m', **kwargs):
 
     """
-    Await and return input. Uses ``rune`` to replace keypresses. Color is grey.
+    Await and return input. Uses ``rune`` to replace keypresses.
 
-    Other arguments are passed to :func:`input`.
+    ``color`` (grey) and other arguments are passed to :func:`input`.
 
     .. code-block:: py
 
@@ -87,7 +87,7 @@ def reject():
 def question(*args, **kwargs):
 
     """
-    Await and return input. Use ``accept`` or ``reject`` to respond with color.
+    Await and return input. Use ``accept`` or ``reject`` to respond.
 
     Other arguments are passed to :func:`api.edit`.
 
@@ -124,7 +124,8 @@ def confirm(*args,
 
     When ``hint`` is ommited, a suitable one takes its place.
 
-    Other arguments except ``limit`` and ``check`` are passed to :func:`input`.
+    ``color`` and other arguments except ``view``, ``limit`` and ``check`` are
+    passed to :func:`input`.
 
     .. code-block:: py
 
@@ -180,8 +181,7 @@ def select(*args, color = _colors.info, focus = _colors.info, **kwargs):
     When ``hint`` is ommited, a suitable one takes its place. The filter value
     will be formatted on the first placeholder (``{0}``).
 
-    Other arguments are passed to :func:`api.select`, with ``focus`` being its
-    ``color``.
+    ``focus`` as ``color`` and other arguments are passed to :func:`api.select`.
 
     .. code-block:: py
 

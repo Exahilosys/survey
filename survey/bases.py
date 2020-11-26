@@ -614,7 +614,7 @@ class MultiLineEditor(Machine, Originful):
     Supports line breaks or moving vertically.
     """
 
-    __slots__ = ('_origin', '_finchck', '_subs', '_limit')
+    __slots__ = ('_origin', '_finchk', '_make', '_subs', '_limit')
 
     def __init__(self,
                  io, cursor,

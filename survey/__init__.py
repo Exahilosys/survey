@@ -143,7 +143,7 @@ def confirm(*args,
 
     if not 'hint' in kwargs:
         template = helpers.paint('({0}/{1}) ', _colors.hint)
-        kwargs['hint'] = utils.hint.confirm(template, default)
+        kwargs['hint'] = utils.hint.confirm(template, default, color = color)
 
     index = None
     def check(value):
@@ -169,15 +169,19 @@ def confirm(*args,
         response = responses[value]
         return (response,)
 
-    input(*args, view = view, **kwargs, limit = limit, check = check)
+    input(
+        *args,
+        **kwargs,
+        view = view,
+        limit = limit,
+        check = check,
+        color = color
+    )
 
     return value
 
 
-def select(*args,
-           color = _colors.info,
-           focus = _colors.info,
-           **kwargs):
+def select(*args, color = _colors.info, focus = _colors.info, **kwargs):
 
     """
     Same as :func:`api.select`, except responds immediately using ``color``.
@@ -207,7 +211,11 @@ def select(*args,
 
     template = kwargs['hint']
     if not template is None:
-        (invoke, hint) = utils.hint.select(template, external = True)
+        (invoke, hint) = utils.hint.select(
+            template,
+            external = True,
+            color = color
+        )
         callback = kwargs.get('callback')
         callback = helpers.succeed_functions(invoke, callback)
         kwargs['callback'] = callback

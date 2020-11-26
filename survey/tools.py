@@ -14,6 +14,8 @@ Visual = collections.namedtuple('Visual', 'dirty ready clean')
 
 class Display:
 
+    __slots__ = ('_io', '_cursor', '_visuals', '_origin', '_width')
+
     def __init__(self, io, cursor):
 
         self._io = io
@@ -150,8 +152,6 @@ class Display:
 
     def _create(self, index, value):
 
-        self._clear(index)
-
         visual = self._insert(index, value)
 
         return visual
@@ -198,6 +198,8 @@ class Display:
 
 class Caption:
 
+    __slots__ = ('_display',)
+
     def __init__(self, display):
 
         self._display = display
@@ -236,6 +238,8 @@ class Caption:
 
 class Machine:
 
+    __slots__ = ()
+
     def get(self):
 
         raise NotImplementedError()
@@ -246,6 +250,8 @@ class Machine:
 
 
 class LineEditor(bases.LineEditor, Machine):
+
+    __slots__ = ()
 
     def get(self):
 
@@ -261,6 +267,8 @@ class LineEditor(bases.LineEditor, Machine):
 
 
 class MultiLineEditor(bases.MultiLineEditor, Machine):
+
+    __slots__ = ()
 
     def get(self):
 
@@ -278,6 +286,8 @@ class MultiLineEditor(bases.MultiLineEditor, Machine):
 
 class Select(bases.Select, Machine):
 
+    __slots__ = ()
+
     def get(self):
 
         result = self._visible[self._index]
@@ -293,6 +303,8 @@ class Select(bases.Select, Machine):
 
 
 class MultiSelect(bases.MultiSelect, Machine):
+
+    __slots__ = ()
 
     def get(self):
 

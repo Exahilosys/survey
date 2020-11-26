@@ -1,3 +1,5 @@
+import functools
+import threading
 import wrapio
 import re
 
@@ -5,6 +7,35 @@ from . import _colors
 
 
 __all__ = ()
+
+
+class Atomic:
+
+    __slots__ = ('_enter', '_leave', '_size', '_lock')
+
+    def __init__(self, enter, leave):
+
+        self._enter = enter
+        self._leave = leave
+
+        self._size = 0
+        self._lock = threading.Lock()
+
+    def _deduce(self, func, step, limit):
+
+        with self._lock:
+            size = self._size + step
+            if not size > limit:
+                func()
+            self._size = size
+
+    def __enter__(self):
+
+        self._deduce(self._enter, 1, 1)
+
+    def __exit__(self, type, value, traceback):
+
+        self._deduce(self._leave, - 1, 0)
 
 
 class Handle(wrapio.Handle):

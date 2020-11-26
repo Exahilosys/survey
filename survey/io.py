@@ -1,6 +1,6 @@
 import termios
-import types
-import threading
+
+from . import helpers
 
 
 __all__ = ('IO',)
@@ -8,7 +8,8 @@ __all__ = ('IO',)
 
 class IO:
 
-    __slots__ = ('_i', '_o', '_buffer', '_fd', '_save', '_mode', '_block')
+    __slots__ = ('_i', '_o', '_buffer', '_fd', '_save', '_mode', '_block',
+                 '_atomic')
 
     def __init__(self, i, o):
 
@@ -23,6 +24,13 @@ class IO:
         self._mode = None
 
         self._block = None
+
+        self._atomic = helpers.Atomic(self.start, self.stop)
+
+    @property
+    def atomic(self):
+
+        return self._atomic
 
     def _swap(self, mode):
 
@@ -98,33 +106,8 @@ class IO:
 
     def ring(self):
 
+        """
+        Sound system bell.
+        """
+
         self.send('\a')
-
-
-_ctx = types.SimpleNamespace(
-    size = 0,
-    lock = threading.Lock()
-)
-
-
-class IO(IO):
-
-    __slots__ = ()
-
-    def __enter__(self):
-
-        with _ctx.lock:
-            _ctx.size += 1
-            if _ctx.size > 1:
-                return
-
-        super().start()
-
-    def __exit__(self, type, value, traceback):
-
-        with _ctx.lock:
-            _ctx.size -= 1
-            if _ctx.size > 0:
-                return
-
-        super().stop()

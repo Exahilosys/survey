@@ -45,7 +45,8 @@ def _update(value):
 
 def update(value):
 
-    _update(value)
+    with _cursor.hidden:
+        _update(value)
 
 
 def _respond(color, draw, delimit):
@@ -75,7 +76,8 @@ def _respond(color, draw, delimit):
 
 def respond(color = None, draw = True, delimit = ', '):
 
-    _respond(color, draw, delimit)
+    with _cursor.hidden:
+        _respond(color, draw, delimit)
 
 
 def _execute(machine, check, view):
@@ -97,6 +99,7 @@ def _execute(machine, check, view):
         break
 
     results = (view if view else machine.view)(value)
+
     _assets.results.extend(results)
 
     return value
@@ -385,6 +388,7 @@ def select(options,
     machine.draw()
     machine.focus()
 
-    value = _execute(machine, None, view)
+    with _cursor.hidden:
+        value = _execute(machine, None, view)
 
     return value

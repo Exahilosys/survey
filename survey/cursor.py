@@ -1,6 +1,8 @@
 import types
 import re
 
+from . import helpers
+
 
 __all__ = ('Cursor',)
 
@@ -16,11 +18,18 @@ EraseMode = types.SimpleNamespace(right = 0, left = 1, full = 2)
 
 class Cursor:
 
-    __slots__ = ('_io',)
+    __slots__ = ('_io', '_hidden')
 
     def __init__(self, io):
 
         self._io = io
+
+        self._hidden = helpers.Atomic(self.hide, self.show)
+
+    @property
+    def hidden(self):
+
+        return self._hidden
 
     def _send(self, code, *args, private = False):
 
@@ -193,7 +202,7 @@ class Cursor:
         Get current location.
         """
 
-        with self._io:
+        with self._io.atomic:
             result = self._locate()
 
         return result
@@ -206,10 +215,9 @@ class Cursor:
 
         self.save()
 
-        self.move(999, 9999)
-
-        size = self.locate()
-
-        self.load()
+        with self._hidden:
+            self.move(999, 9999)
+            size = self.locate()
+            self.load()
 
         return size

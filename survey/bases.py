@@ -84,7 +84,7 @@ class Source(helpers.Handle):
 
     def stream(self):
 
-        with self._io:
+        with self._io.atomic:
             while not self._done:
                 self._advance()
 
@@ -226,6 +226,8 @@ class WindowView:
     ABC for classes implementing something that can be partially viewed.
     """
 
+    __slots__ = () # ('_index', '_lower', '_bound') on each subclass
+
     def __init__(self, bound):
 
         self._index = 0
@@ -291,6 +293,8 @@ class Machine(WindowView, helpers.Handle):
     ABC for partially-viewable handlers.
     """
 
+    __slots__ = ('_index', '_lower', '_bound', '_io', '_cursor')
+
     def __init__(self, io, cursor, bound, *args, **kwargs):
 
         WindowView.__init__(self, bound)
@@ -331,6 +335,16 @@ class Machine(WindowView, helpers.Handle):
         self._draw(self._lower)
 
         self._focus()
+
+    def resize(self, size, full = True):
+
+        if full:
+            self._clear()
+
+        self._resize(size)
+
+        if full:
+            self._redraw(skip = True)
 
     def _move_y(self, up, size):
 
@@ -399,6 +413,8 @@ class LineEditor(Machine):
 
     Does not support line breaks or moving vertically.
     """
+
+    __slots__ = ('_limit', '_funnel', '_buffer')
 
     def __init__(self, io, cursor, width, limit, funnel, *args, **kwargs):
 
@@ -470,25 +486,6 @@ class LineEditor(Machine):
         size = self._shown - self._among
 
         self._cursor.left(size)
-
-    def _redraw(self, skip = False):
-
-        if not skip:
-            self._clear()
-
-        self._draw(self._lower)
-
-        self._focus()
-
-    def resize(self, size, full = True):
-
-        if full:
-            self._clear()
-
-        self._resize(size)
-
-        if full:
-            self._redraw(skip = True)
 
     def _move_y(self, *args, **kwargs):
 
@@ -600,6 +597,8 @@ class LineEditor(Machine):
 
 class Originful:
 
+    __slots__ = () # ('_origin',) on each subclass
+
     def _originate(self):
 
         (cy, cx) = self._cursor.locate()
@@ -614,6 +613,8 @@ class MultiLineEditor(Machine, Originful):
 
     Supports line breaks or moving vertically.
     """
+
+    __slots__ = ('_origin', '_finchck', '_subs', '_limit')
 
     def __init__(self,
                  io, cursor,
@@ -898,6 +899,10 @@ class Select(Machine, Originful):
     Use for cycling through and selecting options.
     """
 
+    __slots__ = ('_origin', '_index', '_options', '_visible', '_changed',
+                 '_buffer', '_width', '_prefix', '_indent', '_funnel',
+                 '_filter')
+
     def __init__(self,
                  io,
                  cursor,
@@ -1132,7 +1137,7 @@ class Select(Machine, Originful):
 
 class MultiSelect(Select):
 
-    __slots__ = ('_unpin', '_pin')
+    __slots__ = ('_unpin', '_pin', '_chosen')
 
     def __init__(self, unpin, pin, indexes, *args, **kwargs):
 

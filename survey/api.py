@@ -10,7 +10,7 @@ from . import tools
 from . import helpers
 
 
-__all__ = ('edit', 'select')
+__all__ = ('update', 'respond', 'edit', 'select')
 
 
 _io = io.IO(sys.stdin, sys.stdout)
@@ -45,6 +45,10 @@ def _update(value):
 
 def update(value):
 
+    """
+    Update the hint.
+    """
+
     with _cursor.hidden:
         _update(value)
 
@@ -75,6 +79,17 @@ def _respond(color, draw, delimit):
 
 
 def respond(color = None, draw = True, delimit = ', '):
+
+    """
+    Reset state and show results.
+
+    :param str color:
+        Used to paint results.
+    :param bool draw:
+        Whether to show results.
+    :param str delimit:
+        Used to join results together.
+    """
 
     with _cursor.hidden:
         _respond(color, draw, delimit)
@@ -179,8 +194,6 @@ def edit(prompt = None,
 
     """
     Await and return ``(input, display)`` from user.
-
-    This should not be used directly for most purposes.
 
     :param str prompt:
         Persistent prompt shown before input.

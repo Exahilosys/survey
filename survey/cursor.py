@@ -36,11 +36,11 @@ class Cursor:
         check = lambda value: not value is None
         params = ';'.join(map(str, filter(check, args)))
         if args:
-            params = f'[{params}'
+            params = '[' + params
 
         self._io.send(_CSI + params + code)
 
-    def up(self, size = None, /):
+    def up(self, size = None):
 
         """
         Move `size` cells up.
@@ -51,7 +51,7 @@ class Cursor:
 
         self._send('A', size)
 
-    def down(self, size = None, /):
+    def down(self, size = None):
 
         """
         Move `size` cells down.
@@ -62,7 +62,7 @@ class Cursor:
 
         self._send('B', size)
 
-    def left(self, size = None, /):
+    def left(self, size = None):
 
         """
         Move `size` cells left.
@@ -73,7 +73,7 @@ class Cursor:
 
         self._send('D', size)
 
-    def right(self, size = None, /):
+    def right(self, size = None):
 
         """
         Move `size` cells right.
@@ -84,7 +84,7 @@ class Cursor:
 
         self._send('C', size)
 
-    def goto(self, x = None, /):
+    def goto(self, x = None):
 
         """
         Move to `x` column.
@@ -92,7 +92,7 @@ class Cursor:
 
         self._send('G', x)
 
-    def next(self, size = None, /):
+    def next(self, size = None):
 
         """
         Move to beginning of `size` lines down.
@@ -104,7 +104,7 @@ class Cursor:
 
         self._send('E', size)
 
-    def last(self, size = None, /):
+    def last(self, size = None):
 
         """
         Move to beginning of `size` lines up.
@@ -116,7 +116,7 @@ class Cursor:
 
         self._send('F', size)
 
-    def move(self, y, x, /):
+    def move(self, y, x):
 
         """
         Move to `x` and `y` coordinates:
@@ -124,7 +124,7 @@ class Cursor:
 
         self._send('f', y, x)
 
-    def clear(self, mode = None, /):
+    def clear(self, mode = None):
 
         """
         Clear display.
@@ -132,7 +132,7 @@ class Cursor:
 
         self._send('J', mode)
 
-    def erase(self, mode = None, /):
+    def erase(self, mode = None):
 
         """
         Erase in-line.

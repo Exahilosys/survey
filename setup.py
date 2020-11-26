@@ -13,6 +13,7 @@ url = f'https://github.com/{author}/{name}'
 
 setuptools.setup(
     name = name,
+    python_requires = '>=3.5',
     version = version,
     url = url,
     packages = setuptools.find_packages(),

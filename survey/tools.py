@@ -9,10 +9,9 @@ from . import helpers
 __all__ = ()
 
 
-Visual = collections.namedtuple('Visual', 'dirty ready clean')
-
-
 class Display:
+
+    _Visual = collections.namedtuple('Visual', 'dirty ready clean')
 
     __slots__ = ('_io', '_cursor', '_visuals', '_origin', '_width')
 
@@ -123,7 +122,7 @@ class Display:
         ready = self._format(index, dirty)
         clean = self._clean(ready)
 
-        visual = Visual(dirty, ready, clean)
+        visual = self._Visual(dirty, ready, clean)
 
         return visual
 

@@ -1,23 +1,14 @@
-import types
 import itertools
 
 from . import api
+from . import utils
 from . import helpers
+
+from . import _colors
 
 
 __all__ = ('update', 'edit', 'input', 'password', 'accept', 'reject',
            'question', 'confirm', 'select')
-
-
-_assets = types.SimpleNamespace(
-    colors = types.SimpleNamespace(
-        info = '\x1b[38;5;6m',
-        done = '\x1b[38;5;10m',
-        fail = '\x1b[38;5;9m',
-        hint = '\x1b[37m',
-        null = helpers.paint.null
-    )
-)
 
 
 def update(value):
@@ -44,7 +35,7 @@ def edit(*args, color = None, **kwargs):
     return result
 
 
-def input(*args, color = _assets.colors.info, **kwargs):
+def input(*args, color = _colors.info, **kwargs):
 
     """
     Same as :func:`edit`, but with a default color.
@@ -90,7 +81,7 @@ def accept():
     Respond with green.
     """
 
-    api.respond(color = _assets.colors.done)
+    api.respond(color = _colors.done)
 
 
 def reject():
@@ -99,7 +90,7 @@ def reject():
     Respond with red.
     """
 
-    api.respond(color = _assets.colors.fail)
+    api.respond(color = _colors.fail)
 
 
 def question(*args, **kwargs):
@@ -120,25 +111,6 @@ def question(*args, **kwargs):
     return api.edit(*args, **kwargs)
 
 
-def _confirm_hint(default = None, options = ('n', 'y'), title = True):
-
-    result = f'{_assets.colors.hint}('
-
-    options = list(options)
-
-    if not default is None:
-        option = options[default]
-        if title:
-            option = option.title()
-        options[default] = f'{_assets.colors.info}{option}{_assets.colors.hint}'
-        if default:
-            options = reversed(options)
-
-    result += '/'.join(options) + f'){_assets.colors.null} '
-
-    return result
-
-
 def confirm(*args,
             sentiments = [
                 ('n', 'no', '0', 'false', 'f'),
@@ -146,7 +118,7 @@ def confirm(*args,
             ],
             responses = ('No', 'Yes'),
             default = None,
-            color = _assets.colors.info,
+            color = _colors.info,
             **kwargs):
 
     """
@@ -170,7 +142,8 @@ def confirm(*args,
     """
 
     if not 'hint' in kwargs:
-        kwargs['hint'] = _confirm_hint(default)
+        template = helpers.paint('({0}/{1}) ', _colors.hint)
+        kwargs['hint'] = utils.hint.confirm(template, default)
 
     index = None
     def check(value):
@@ -201,39 +174,16 @@ def confirm(*args,
     return value
 
 
-def _select_hint(multi, instruct = 'type'):
-
-    instructions = ['filter: {0}', 'move: ↑↓']
-    if multi:
-        instructions.extend(('pick: → all: →→', 'unpick: ← all: ←←'))
-
-    template = ' | '.join(instructions)
-    template = f'{_assets.colors.hint}[{template}]{_assets.colors.null}'
-
-    def callback(event, result, *args):
-        if event == 'filter':
-            (value,) = args
-            if value:
-                show = _assets.colors.info + value + _assets.colors.hint
-            else:
-                show = instruct
-            hint = template.format(show)
-            update(hint)
-
-    hint = template.format(instruct)
-
-    return (callback, hint)
-
-
 def select(*args,
-           color = _assets.colors.info,
-           focus = _assets.colors.info,
+           color = _colors.info,
+           focus = _colors.info,
            **kwargs):
 
     """
     Same as :func:`api.select`, except responds immediately using ``color``.
 
-    When ``hint`` is ommited, a suitable one takes its place.
+    When ``hint`` is ommited, a suitable one takes its place. The filter value
+    will be formatted on the first placeholder (``{0}``).
 
     Other arguments are passed to :func:`api.select`, with ``focus`` being its
     ``color``.
@@ -248,18 +198,18 @@ def select(*args,
     """
 
     if not 'hint' in kwargs:
-        multi = kwargs.get('multi', False)
-        (callback, hint) = _select_hint(multi)
-        callbacks = [callback]
-        try:
-            callback = kwargs['callback']
-        except KeyError:
-            pass
-        else:
-            callbacks.append(callback)
-        def callback(*args, **kwargs):
-            for callback in callbacks:
-                callback(*args, **kwargs)
+        instructs = ['filter: type', 'move: ↑↓']
+        if kwargs.get('multi', False):
+            instructs.extend(('pick: → all: →→', 'unpick: ← all: ←←'))
+        template = '{0} [' + ' | '.join(instructs) + ']'
+        template = helpers.paint(template, _colors.hint)
+        kwargs['hint'] = template
+
+    template = kwargs['hint']
+    if not template is None:
+        (invoke, hint) = utils.hint.select(template, external = True)
+        callback = kwargs.get('callback')
+        callback = helpers.succeed_functions(invoke, callback)
         kwargs['callback'] = callback
         kwargs['hint'] = hint
 

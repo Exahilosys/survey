@@ -5,7 +5,7 @@ with open('README.md') as file:
 
 name = 'survey'
 
-version = '2.0.1'
+version = '2.0.2'
 
 author = 'Exahilosys'
 

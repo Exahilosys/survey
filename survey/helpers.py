@@ -1,6 +1,8 @@
 import wrapio
 import re
 
+from . import _colors
+
 
 __all__ = ()
 
@@ -25,13 +27,9 @@ class Handle(wrapio.Handle):
         return fail
 
 
-_null_color = '\x1b[0m'
-
-def paint(value, color, null = _null_color):
+def paint(value, color, null = _colors.null):
 
     return color + value + null
-
-paint.null = _null_color
 
 
 class seq:
@@ -101,11 +99,21 @@ def clean(value, keep = set()):
         yield rune
 
 
+def succeed_functions(*functions):
+
+    functions = tuple(filter(bool, functions))
+
+    def wrapper(*args, **kwargs):
+        for function in functions:
+            result = function(*args, **kwargs)
+        return result
+
+    return wrapper
+
+
 def combine_functions(*functions, index = 0):
 
-    check = lambda function: not function is None
-
-    functions = tuple(filter(check, functions))
+    functions = tuple(filter(bool, functions))
 
     def wrapper(*args, **kwargs):
         args = list(args)

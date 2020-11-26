@@ -143,7 +143,7 @@ def confirm(*args,
 
     if not 'hint' in kwargs:
         template = helpers.paint('({0}/{1}) ', _colors.hint)
-        kwargs['hint'] = utils.hint.confirm(template, default)
+        kwargs['hint'] = utils.hint.confirm(template, default, color = color)
 
     index = None
     def check(value):
@@ -169,7 +169,7 @@ def confirm(*args,
         response = responses[value]
         return (response,)
 
-    input(*args, view = view, **kwargs, limit = limit, check = check)
+    input(*args, view = view, **kwargs, limit = limit, check = check, color = color)
 
     return value
 

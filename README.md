@@ -1,6 +1,6 @@
-A simple library for creating beautiful interactive prompts.
+✨ A simple library for creating beautiful interactive prompts.
 
-<img src="images/showcase.gif" width="57.5%">
+![Showcase](/images/showcase.gif)
 
 ```py
 import survey

@@ -1,14 +1,14 @@
 import itertools
 
 from . import api
-from . import utils
 from . import helpers
+from . import utils
 
 from . import _colors
 
 
-__all__ = ('update', 'edit', 'input', 'password', 'accept', 'reject',
-           'question', 'confirm', 'select')
+__all__ = ('update', 'input', 'password', 'accept', 'reject', 'question',
+           'confirm', 'select')
 
 
 def update(value):
@@ -20,12 +20,17 @@ def update(value):
     api.update(value)
 
 
-def edit(*args, color = None, **kwargs):
+def input(*args, color = _colors.info, **kwargs):
 
     """
-    Same as :func:`api.edit`, except responds immediately using ``color``.
+    Same as :func:`api.edit`, but responds immediately ``color``.
 
-    Other arguments are passed to :func:`edit`.
+    Other arguments are passed to :func:`api.edit`.
+
+    .. code-block:: py
+
+        answer = survey.input('How old are you? ', '(age) ')
+        print(f'You are {answer} years old!')
     """
 
     result = api.edit(*args, **kwargs)
@@ -35,28 +40,12 @@ def edit(*args, color = None, **kwargs):
     return result
 
 
-def input(*args, color = _colors.info, **kwargs):
-
-    """
-    Same as :func:`edit`, but with a default color.
-
-    Other arguments are passed to :func:`edit`.
-
-    .. code-block:: py
-
-        answer = survey.input('How old are you? ', '(age) ')
-        print(f'You are {answer} years old!')
-    """
-
-    return edit(*args, color = color, **kwargs)
-
-
 def password(*args, rune = '*', color = '\x1b[90m', **kwargs):
 
     """
     Await and return input. Uses ``rune`` to replace keypresses. Color is grey.
 
-    Other arguments are passed to :func:`edit`.
+    Other arguments are passed to :func:`input`.
 
     .. code-block:: py
 
@@ -72,7 +61,9 @@ def password(*args, rune = '*', color = '\x1b[90m', **kwargs):
     def view(value):
         return (len(value) * rune,)
 
-    return edit(*args, view = view, color = color, **kwargs, funnel = funnel)
+    result = input(*args, view = view, color = color, **kwargs, funnel = funnel)
+
+    return result
 
 
 def accept():
@@ -98,7 +89,7 @@ def question(*args, **kwargs):
     """
     Await and return input. Use ``accept`` or ``reject`` to respond with color.
 
-    This is an alias for :func:`api.edit`.
+    Other arguments are passed to :func:`api.edit`.
 
     .. code-block:: py
 

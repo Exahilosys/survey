@@ -28,7 +28,7 @@ _assets = types.SimpleNamespace(
     ),
     machine = None,
     results = [],
-    bellow = 0,
+    fall = 0,
     signal = None,
 )
 
@@ -53,7 +53,7 @@ def update(value):
         _update(value)
 
 
-def _respond(color, draw, delimit):
+def _respond(full, color, draw, delimit):
 
     _assets.machine.clear()
 
@@ -73,16 +73,22 @@ def _respond(color, draw, delimit):
 
     result = delimit.join(results)
 
-    _assets.caption.finish(result, fall = _assets.bellow)
+    if not full:
+        result += _assets.fall * os.linesep
 
-    _io.send(os.linesep)
+    _assets.caption.finish(result, full = full)
+
+    if not full:
+        _io.send(os.linesep)
 
 
-def respond(color = None, draw = True, delimit = ', '):
+def respond(full = False, color = None, draw = True, delimit = ', '):
 
     """
     Reset state and show results.
 
+    :param bool full:
+        Whether to also erase prompt.
     :param str color:
         Used to paint results.
     :param bool draw:
@@ -92,7 +98,7 @@ def respond(color = None, draw = True, delimit = ', '):
     """
 
     with _cursor.hidden:
-        _respond(color, draw, delimit)
+        _respond(full, color, draw, delimit)
 
 
 def _execute(machine, check, view):
@@ -219,12 +225,12 @@ def edit(prompt = None,
 
     if multi:
         machine = _line_edit_multi(my, mx, finish, limit, funnel, callback)
-        bellow = 1
+        fall = 1
     else:
         machine = _line_edit_single(my, mx, limit, funnel, callback)
-        bellow = 0
+        fall = 0
 
-    _assets.bellow = bellow
+    _assets.fall = fall
 
     _assets.caption.create(prompt or '', hint or '', fall = multi)
 
@@ -394,7 +400,7 @@ def select(options,
             callback
         )
 
-    _assets.bellow = 0
+    _assets.fall = 0
 
     _assets.caption.create(prompt or '', hint or '', fall = 1)
 

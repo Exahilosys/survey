@@ -222,13 +222,13 @@ class Caption:
 
         self._display.update(1, custom)
 
-    def finish(self, custom, fall = 0):
+    def finish(self, custom, full = False):
 
-        for index in reversed(range(1, 3)):
+        enter = not full
+        leave = len(self._display.visuals)
+        indexes = range(enter, leave)
+        for index in reversed(indexes):
             self._display.delete(index)
-
-        if fall:
-            self._display.create(fall * os.linesep)
 
         self._display.create(custom)
 

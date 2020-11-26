@@ -6,7 +6,7 @@ from . import helpers
 from . import _colors
 
 
-__all__ = ()
+__all__ = ('hint',)
 
 
 def _get_last_color(check, value):

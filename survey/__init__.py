@@ -20,7 +20,7 @@ def update(value):
     api.update(value)
 
 
-def input(*args, color = _colors.info, **kwargs):
+def input(*args, color = _colors.info, erase = False, **kwargs):
 
     """
     Await and return input. Respond immediately ``color`` (light blue).
@@ -35,7 +35,7 @@ def input(*args, color = _colors.info, **kwargs):
 
     result = api.edit(*args, **kwargs)
 
-    api.respond(color = color)
+    api.respond(color = color, full = erase)
 
     return result
 
@@ -87,7 +87,7 @@ def reject():
 def question(*args, **kwargs):
 
     """
-    Await and return input. Use ``accept`` or ``reject`` to respond.
+    Await and return input. Use :func:`accept` or :func:`reject` to respond.
 
     Other arguments are passed to :func:`api.edit`.
 
@@ -173,7 +173,11 @@ def confirm(*args,
     return value
 
 
-def select(*args, color = _colors.info, focus = _colors.info, **kwargs):
+def select(*args,
+           focus = _colors.info,
+           color = _colors.info,
+           erase = False,
+           **kwargs):
 
     """
     Same as :func:`api.select`, except responds immediately using ``color``.
@@ -214,6 +218,6 @@ def select(*args, color = _colors.info, focus = _colors.info, **kwargs):
 
     result = api.select(*args, **kwargs, color = focus)
 
-    api.respond(color = color)
+    api.respond(color = color, full = erase)
 
     return result

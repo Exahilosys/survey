@@ -1,6 +1,6 @@
 import setuptools
 
-with open('README.md') as file:
+with open('README.rst') as file:
     readme = file.read()
 
 name = 'survey'
@@ -19,7 +19,6 @@ setuptools.setup(
     license = 'MIT',
     description = 'A simple library for creating beautiful interactive prompts.',
     long_description = readme,
-    long_description_content_type= 'text/markdown',
     install_requires = [
         'wrapio'
     ],

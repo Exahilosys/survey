@@ -164,13 +164,13 @@ def _line_edit_single(my, mx, limit, funnel, callback):
     return editor
 
 
-def _line_edit_multi(my, mx, finish, limit, funnel, callback):
+def _line_edit_multi(my, mx, trail, limit, funnel, callback):
 
     def finchk():
-        subs = editor.subs[-finish:]
-        result = len(subs) == finish and not any(sub.buffer for sub in subs)
+        subs = editor.subs[-trail:]
+        result = len(subs) == trail and not any(sub.buffer for sub in subs)
         if result:
-            editor.delete(True, finish)
+            editor.delete(True, trail)
         return result
 
     editor = tools.MultiLineEditor(
@@ -193,7 +193,7 @@ def edit(prompt = None,
          limit = None,
          funnel = None,
          check = None,
-         finish = 2,
+         trail = 2,
          callback = None,
          view = None,
          multi = False):
@@ -211,7 +211,7 @@ def edit(prompt = None,
         Used with ``(rune)`` and must return some rune.
     :param func check:
         Used with ``(answer)`` for validation and must return :class:`bool`.
-    :param int finish:
+    :param int trail:
         Only with ``multi``. Amount of empty lines required to submit.
     :param func callback:
         Used with ``(name, *args)`` for listening to keypress events.
@@ -231,7 +231,7 @@ def edit(prompt = None,
     callback = _callback(callback)
 
     if multi:
-        machine = _line_edit_multi(my, mx, finish, limit, funnel, callback)
+        machine = _line_edit_multi(my, mx, trail, limit, funnel, callback)
         fall = 1
     else:
         machine = _line_edit_single(my, mx, limit, funnel, callback)

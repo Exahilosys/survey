@@ -406,6 +406,14 @@ class Machine(WindowView, helpers.Handle):
         self._enter()
 
 
+def _clean(value):
+
+    value = helpers.seq.clean(value)
+    value = helpers.clean(value)
+
+    return value
+
+
 class LineEditor(Machine):
 
     """
@@ -523,8 +531,9 @@ class LineEditor(Machine):
     def _ensure(self, runes):
 
         value = ''.join(runes)
+        value = _clean(value)
 
-        return helpers.clean(value)
+        return value
 
     def _insert(self, runes):
 
@@ -806,7 +815,7 @@ class MultiLineEditor(Machine, Originful):
 
         return (ysize, xsize)
 
-    def _insert(self, runes):
+    def _ensure(self, runes):
 
         esize = len(runes)
         buffers = tuple(sub.buffer for sub in self._subs)
@@ -815,6 +824,10 @@ class MultiLineEditor(Machine, Originful):
 
         if not self._limit is None and nsize > self._limit:
             raise Abort()
+
+    def _insert(self, runes):
+
+        self._ensure(runes)
 
         self._sub.insert(runes)
 
@@ -874,15 +887,17 @@ class MultiLineEditor(Machine, Originful):
 
         self._index = index
 
+        runes = (os.linesep,)
+
         if full:
             self._calibrate()
             self._redraw(skip = True)
         else:
-            self._io.send(os.linesep)
+            self._io.send(*runes)
             self._draw(self._index)
             self._focus()
 
-        self._dispatch('insert', (os.linesep,))
+        self._dispatch('insert', runes)
 
     def newsub(self):
 
@@ -971,7 +986,7 @@ class Select(Machine, Originful):
                 option = self._changed[index]
             except KeyError:
                 if self._funnel:
-                    option = self._funnel(option)
+                    option = self._funnel(index, option)
                 self._changed[index] = option
 
         prefix = self._prefix if current else ' ' * self._indent
@@ -1112,9 +1127,16 @@ class Select(Machine, Originful):
 
     def _insert(self, runes):
 
+        if '\t' in runes:
+            self._dispatch('tab')
+            return
+
         save = self._buffer.copy()
 
-        self._buffer.extend(runes)
+        value = ''.join(value)
+        value = _clean(runes)
+
+        self._buffer.extend(value)
 
         try:
             self._specify(True)

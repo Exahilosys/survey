@@ -374,6 +374,7 @@ def select(options,
     Dispatches following events:
         - ``'move'`` with ``(up: bool, size: int)``
         - ``'filter'`` with ``(argument: str)``
+        - ``'tab'``
         - ``'submit'``
 
     Event names are followed by current result, and then arguments.

@@ -7,14 +7,23 @@ from . import utils
 from . import _colors
 
 
-__all__ = ('update', 'input', 'password', 'accept', 'reject', 'question',
-           'confirm', 'select')
+__all__ = ('finish', 'update', 'input', 'password', 'accept', 'reject',
+           'question', 'confirm', 'select')
+
+
+def finish():
+
+    """
+    Stop listening for keypresses.
+    """
+
+    api.finish()
 
 
 def update(value):
 
     """
-    Update the hint.
+    Update hint.
     """
 
     api.update(value)
@@ -182,8 +191,8 @@ def select(*args,
     """
     Same as :func:`api.select`, except responds immediately using ``color``.
 
-    When ``hint`` is ommited, a suitable one takes its place. The filter value
-    will be formatted on the first placeholder (``{0}``).
+    When ``hint`` is ommited, a suitable one takes its place. Filter value will
+    be formatted on first placeholder (``{0}``).
 
     ``focus`` as ``color`` and other arguments are passed to :func:`api.select`.
 

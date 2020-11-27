@@ -33,6 +33,20 @@ _assets = types.SimpleNamespace(
 )
 
 
+def _finish():
+
+    _assets.signal()
+
+
+def finish():
+
+    """
+    Stop listening for keypresses.
+    """
+
+    _finish()
+
+
 def _update(value):
 
     _assets.machine.clear()
@@ -145,7 +159,7 @@ def _callback(function):
             result = _assets.machine.get()
             function(name, result, *args)
         if name == 'submit':
-            _assets.signal()
+            _finish()
 
     return callback
 
@@ -368,9 +382,9 @@ def select(options,
     (my, mx) = _measure()
 
     if color:
-        def paint(option):
+        def paint(index, option):
             return helpers.paint(option, color)
-        funnel = helpers.combine_functions(funnel, paint)
+        funnel = helpers.combine_functions(funnel, paint, index = 1)
 
     if not limit:
         limit = len(options)

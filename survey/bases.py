@@ -882,6 +882,8 @@ class MultiLineEditor(Machine, Originful):
             self._draw(self._index)
             self._focus()
 
+        self._dispatch('insert', (os.linesep,))
+
     def newsub(self):
 
         self._newsub()

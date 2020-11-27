@@ -46,7 +46,7 @@ def _update(value):
 def update(value):
 
     """
-    Update the hint.
+    Update hint.
     """
 
     with _cursor.hidden:
@@ -217,6 +217,13 @@ def edit(prompt = None,
         Used with ``(name, *args)`` for listening to keypress events.
     :param bool multi:
         Whether to accept line breaks.
+
+    Dispatches following events:
+        - ``'insert'`` with ``(runes: list[str])``
+        - ``'delete'`` with ``(left: bool, size: int)``
+        - ``'submit'``
+
+    Event names are followed by current result, and then arguments.
     """
 
     (my, mx) = _measure()
@@ -349,6 +356,13 @@ def select(options,
         Used with ``(name, *args)`` for listening to keypress events.
     :param bool multi:
         Whether to allow multiple selections using **←** and **→** keys.
+
+    Dispatches following events:
+        - ``'move'`` with ``(up: bool, size: int)``
+        - ``'filter'`` with ``(argument: str)``
+        - ``'submit'``
+
+    Event names are followed by current result, and then arguments.
     """
 
     (my, mx) = _measure()

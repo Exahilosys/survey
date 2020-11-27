@@ -9,13 +9,15 @@ from . import _colors
 __all__ = ('hint',)
 
 
-def _get_last_color(check, value):
+def _get_last_color(check, value, null = True):
 
     parts = helpers.seq.split(value)
 
     last = None
     for (index, part) in enumerate(parts):
-        if index % 2 and part.endswith('m'):
+        sgr = index % 2 and part.endswith('m')
+        inc = sgr and (null or not part.endswith('0m'))
+        if inc:
             last = part
         elif check(part):
             break

@@ -1133,8 +1133,8 @@ class Select(Machine, Originful):
 
         save = self._buffer.copy()
 
-        value = ''.join(value)
-        value = _clean(runes)
+        value = ''.join(runes)
+        value = _clean(value)
 
         self._buffer.extend(value)
 

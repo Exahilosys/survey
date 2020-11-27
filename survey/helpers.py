@@ -58,11 +58,6 @@ class Handle(wrapio.Handle):
         return fail
 
 
-def paint(value, color, null = _colors.null):
-
-    return color + value + null
-
-
 class seq:
 
     _pattern = re.compile('(\x1b[\\[0-?]*[@-~])')
@@ -122,6 +117,54 @@ class seq:
         return ''.join(parts)
 
 
+def _color_split(value):
+
+    parts = seq.split(value)
+
+    buffer = []
+    for (index, part) in enumerate(parts):
+        if index % 2 and part.endswith('m'):
+            yield ''.join(buffer)
+            yield part
+            buffer.clear()
+            continue
+        buffer.append(part)
+
+    yield ''.join(buffer)
+
+
+_null_color = _colors.null
+
+
+def _color_smear(value, color):
+
+    parts = _color_split(value)
+
+    depth = 0
+    for (index, part) in enumerate(parts):
+        if not index % 2:
+            yield part
+            continue
+        if part == _null_color:
+            depth -= 1
+            if not depth:
+                part = color
+        else:
+            depth += 1
+        yield part
+
+
+def paint(value, color):
+
+    if not color:
+        return value
+
+    parts = _color_smear(value, color)
+    parts = tuple(parts)
+
+    return color + ''.join(parts) + _null_color
+
+
 def clean(value, keep = set()):
 
     for rune in value:
@@ -153,3 +196,26 @@ def combine_functions(*functions, index = 0):
         return args[index]
 
     return wrapper
+
+
+def _multifilter(func, *iterables):
+
+    (first, *rest) = map(iter, iterables)
+
+    while True:
+        try:
+            value = next(first)
+        except StopIteration:
+            break
+        values = map(next, rest)
+        accept = func(value)
+        values = tuple(values)
+        if accept:
+            yield (value, *values)
+
+
+def multifilter(*args, **kwargs):
+
+    result = _multifilter(*args, **kwargs)
+
+    return zip(*result)

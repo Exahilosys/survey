@@ -9,22 +9,6 @@ from . import _colors
 __all__ = ('hint',)
 
 
-def _get_last_color(check, value, null = True):
-
-    parts = helpers.seq.split(value)
-
-    last = None
-    for (index, part) in enumerate(parts):
-        sgr = index % 2 and part.endswith('m')
-        inc = sgr and (null or not part.endswith('0m'))
-        if inc:
-            last = part
-        elif check(part):
-            break
-
-    return last
-
-
 class hint:
 
     def confirm(template,
@@ -56,9 +40,7 @@ class hint:
             if inflate:
                 option = option.upper()
             if color:
-                check = lambda part: '{0}' in part
-                last = _get_last_color(check, template)
-                option = color + option + (last or _colors.null)
+                option = helpers.paint(option, color)
             options[index] = option
             if default is True:
                 options = reversed(options)
@@ -87,13 +69,10 @@ class hint:
         Use the callback for automatically updating hint.
         """
 
-        check = lambda part: '{0}' in part
-        last = _get_last_color(check, template)
-
         def choose(value):
             if not value:
                 return '' if external else default
-            return color + value + (last or _colors.null)
+            return helpers.paint(value, color)
 
         def format(value):
             show = choose(value)

@@ -27,24 +27,27 @@ _assets = types.SimpleNamespace(
         )
     ),
     machine = None,
-    results = [],
+    shows = [],
     fall = 0,
     signal = None,
+    gentle = False,
 )
 
 
-def _finish():
+def _finish(gentle):
 
     _assets.signal()
 
+    _assets.gentle = gentle
 
-def finish():
+
+def finish(gentle):
 
     """
     Stop listening for keypresses.
     """
 
-    _finish()
+    _finish(gentle)
 
 
 def _update(value):
@@ -67,40 +70,41 @@ def update(value):
         _update(value)
 
 
-def _respond(full, color, draw, delimit):
+def _respond(shows, full, color, draw, delimit):
 
     _assets.machine.clear()
 
-    results = []
-    while True:
-        try:
-            result = _assets.results.pop(0)
-        except IndexError:
-            break
-        if not draw:
-            continue
-        results.append(result)
+    if shows is None:
+        shows = _assets.shows.copy()
+
+    _assets.shows.clear()
 
     if color:
         paint = lambda value: helpers.paint(value, color)
-        results = map(paint, results)
+        shows = map(paint, shows)
 
-    result = delimit.join(results)
+    show = delimit.join(shows)
 
     if not full:
-        result = _assets.fall * os.linesep + result
+        show = _assets.fall * os.linesep + show
 
-    _assets.caption.finish(result, full = full)
+    _assets.caption.finish(show, full = full)
 
     if not full:
         _io.send(os.linesep)
 
 
-def respond(full = False, color = None, draw = True, delimit = ', '):
+def respond(shows = None,
+            full = False,
+            color = None,
+            draw = True,
+            delimit = ', '):
 
     """
     Reset state and show results.
 
+    :param list[str] show:
+        What to show instead.
     :param bool full:
         Whether to also erase prompt.
     :param str color:
@@ -112,14 +116,14 @@ def respond(full = False, color = None, draw = True, delimit = ', '):
     """
 
     with _cursor.hidden:
-        _respond(full, color, draw, delimit)
+        _respond(shows, full, color, draw, delimit)
 
 
-def _execute(machine, check, view):
+def _execute(machine, check):
 
     _assets.machine = machine
 
-    translator = bases.Translator(_io, callback = machine.invoke)
+    translator = bases.Translator(_io, callback = _assets.machine.invoke)
 
     source = bases.Source(_io, callback = translator.invoke)
 
@@ -127,17 +131,16 @@ def _execute(machine, check, view):
 
     while True:
         source.stream()
-        value = machine.get()
-        if check and not check(value):
+        result = _assets.machine.get()
+        if _assets.gentle and check and not check(result):
             _io.ring()
             continue
         break
 
-    results = (view if view else machine.view)(value)
+    shows = machine.view(result)
+    _assets.shows.extend(shows)
 
-    _assets.results.extend(results)
-
-    return value
+    return result
 
 
 def _measure():
@@ -152,14 +155,23 @@ def _measure():
     return (my, mx)
 
 
+class Abort(Exception):
+
+    __slots__ = ()
+
+
 def _callback(function):
 
     def callback(name, *args):
         if function:
             result = _assets.machine.get()
-            function(name, result, *args)
+            try:
+                function(name, result, *args)
+            except Abort:
+                _io.ring()
+                return
         if name == 'submit':
-            _finish()
+            _finish(True)
 
     return callback
 
@@ -181,10 +193,12 @@ def _line_edit_single(my, mx, limit, funnel, callback):
 def _line_edit_multi(my, mx, trail, limit, funnel, callback):
 
     def finchk():
+        init = len(editor.subs)
         subs = editor.subs[-trail:]
         result = len(subs) == trail and not any(sub.buffer for sub in subs)
         if result:
-            editor.delete(True, trail)
+            extra = init == trail
+            editor.delete(True, trail - extra)
         return result
 
     editor = tools.MultiLineEditor(
@@ -206,10 +220,9 @@ def edit(prompt = None,
          hint = None,
          limit = None,
          funnel = None,
-         check = None,
          trail = 2,
+         check = None,
          callback = None,
-         view = None,
          multi = False):
 
     """
@@ -223,19 +236,14 @@ def edit(prompt = None,
         Max allowed size of internal rune buffer.
     :param func funnel:
         Used with ``(rune)`` and must return some rune.
-    :param func check:
-        Used with ``(answer)`` for validation and must return :class:`bool`.
     :param int trail:
         Only with ``multi``. Amount of empty lines required to submit.
+    :param func check:
+        Used with ``(result)`` for validation and must return :class:`bool`.
     :param func callback:
         Used with ``(name, *args)`` for listening to keypress events.
     :param bool multi:
         Whether to accept line breaks.
-
-    Dispatches following events:
-        - ``'insert'`` with ``(runes: list[str])``
-        - ``'delete'`` with ``(left: bool, size: int)``
-        - ``'submit'``
 
     Event names are followed by current result, and then arguments.
     """
@@ -255,7 +263,7 @@ def edit(prompt = None,
 
     _assets.caption.create(prompt or '', hint or '', fall = multi)
 
-    value = _execute(machine, check, view)
+    value = _execute(machine, check)
 
     return value
 
@@ -338,8 +346,8 @@ def select(options,
            unpin = '[ ] ',
            pin = '[X] ',
            indexes = (),
+           check = None,
            callback = None,
-           view = None,
            multi = False):
 
     """
@@ -366,16 +374,12 @@ def select(options,
         Indicator for selected items (multi only).
     :param list[int] indexes:
         Indexes options to pre-select (multi only).
+    :param func check:
+        Used with ``(result)`` for validation and must return :class:`bool`.
     :param func callback:
         Used with ``(name, *args)`` for listening to keypress events.
     :param bool multi:
         Whether to allow multiple selections using **←** and **→** keys.
-
-    Dispatches following events:
-        - ``'move'`` with ``(up: bool, size: int)``
-        - ``'filter'`` with ``(argument: str)``
-        - ``'tab'``
-        - ``'submit'``
 
     Event names are followed by current result, and then arguments.
     """
@@ -437,6 +441,6 @@ def select(options,
     machine.focus()
 
     with _cursor.hidden:
-        value = _execute(machine, None, view)
+        value = _execute(machine, check)
 
     return value

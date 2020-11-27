@@ -348,53 +348,91 @@ class Machine(WindowView, helpers.Handle):
 
     def _move_y(self, up, size):
 
-        raise NotImplementedError()
+        pass
+
+    def _e_move_y(self, up, size):
+
+        self._move_y(up, size)
+
+        self._dispatch('move_y', up, size)
 
     @wrapio.event(Translator.Event.move_y)
     def _nnc(self, up):
 
-        self._move_y(up, 1)
+        self._e_move_y(up, 1)
 
     def _move_x(self, left, size):
 
-        raise NotImplementedError()
+        pass
 
-    def move(self, left, size):
+    def _e_move_x(self, left, size):
 
         self._move_x(left, size)
+
+        self._dispatch('move_x', left, size)
 
     @wrapio.event(Translator.Event.move_x)
     def _nnc(self, left):
 
-        self._move_x(left, 1)
+        self._e_move_x(left, 1)
+
+    def _tab(self):
+
+        pass
+
+    def _e_tab(self):
+
+        self._tab()
+
+        self._dispatch('tab')
 
     def _insert(self, runes):
 
-        raise NotImplementedError()
+        pass
+
+    def _e_insert(self, runes):
+
+        if '\t' in runes:
+            self._e_tab()
+            return
+
+        runes = self._insert(runes)
+
+        self._dispatch('insert', runes)
 
     def insert(self, runes):
 
-        self._insert(runes)
+        self._e_insert(runes)
 
     @wrapio.event(Translator.Event.insert)
     def _nnc(self, rune):
 
         runes = (rune,)
 
-        self._insert(runes)
+        self._e_insert(runes)
 
     def _delete(self, left, size):
 
-        raise NotImplementedError()
+        pass
+
+    def _e_delete(self, left, size):
+
+        self._delete(left, size)
+
+        self._dispatch('delete', left, size)
 
     def delete(self, left, size):
 
-        self._delete(left, size)
+        self._e_delete(left, size)
 
     @wrapio.event(Translator.Event.delete)
     def _nnc(self, left):
 
-        self._delete(left, 1)
+        self._e_delete(left, 1)
+
+    def _submit(self):
+
+        self._dispatch('submit')
 
     def _enter(self):
 
@@ -495,10 +533,6 @@ class LineEditor(Machine):
 
         self._cursor.left(size)
 
-    def _move_y(self, *args, **kwargs):
-
-        raise Abort()
-
     def _move_x(self, left, size):
 
         if left:
@@ -566,12 +600,12 @@ class LineEditor(Machine):
         else:
             self._show(runes)
 
-        self._dispatch('insert', runes)
+        return runes
 
     def _delete(self, left, size):
 
         if left:
-            self._move_x(left, size)
+            self._move_x(True, size)
 
         limit = len(self._buffer) - self._index
 
@@ -588,16 +622,10 @@ class LineEditor(Machine):
 
         self._focus()
 
-        self._dispatch('delete', left, size)
-
     @wrapio.event(Translator.Event.delete)
     def _nnc(self, left):
 
         self._delete(left, 1)
-
-    def _submit(self):
-
-        self._dispatch('submit')
 
     def _enter(self):
 
@@ -792,8 +820,8 @@ class MultiLineEditor(Machine, Originful):
 
         buffers = self._rcut(left)
 
-        # remove one to account for first new line
-        limit = sum(map(len, buffers)) + len(buffers) - 1 # current
+        # remove one to account for current line
+        limit = sum(map(len, buffers)) + len(buffers) - 1
 
         excess = xsize - limit
         if excess > 0:
@@ -829,16 +857,16 @@ class MultiLineEditor(Machine, Originful):
 
         self._ensure(runes)
 
-        self._sub.insert(runes)
+        runes = self._sub.insert(runes)
 
-        self._dispatch('insert', runes)
+        return runes
 
     def _delete(self, left, size):
 
         if left:
-            (ysize, xsize) = self._move_x(left, size)
-        else:
-            (ysize, xsize) = self._rclc(left, xsize)
+            self._move_x(True, size)
+
+        (ysize, xsize) = self._rclc(False, size)
 
         kli = self._index + 1
         sub = self._sub
@@ -850,15 +878,7 @@ class MultiLineEditor(Machine, Originful):
         if ysize:
             self._redraw()
 
-        runes = sub.delete(False, size - ysize)
-
-        self._dispatch('delete', left, size)
-
-        return runes
-
-    def _submit(self):
-
-        self._dispatch('submit')
+        sub.delete(False, size - ysize)
 
     def _newsub(self):
 
@@ -1090,16 +1110,6 @@ class Select(Machine, Originful):
         else:
             self._show(self._visible[index], True)
 
-        self._dispatch('move', up, size)
-
-    def move(self, up, size):
-
-        self._move_y(up, size)
-
-    def _move_x(self, left, size):
-
-        raise Abort()
-
     def _specify(self, new):
 
         argument = ''.join(self._buffer)
@@ -1127,10 +1137,6 @@ class Select(Machine, Originful):
 
     def _insert(self, runes):
 
-        if '\t' in runes:
-            self._dispatch('tab')
-            return
-
         save = self._buffer.copy()
 
         value = ''.join(runes)
@@ -1156,7 +1162,7 @@ class Select(Machine, Originful):
 
     def _enter(self):
 
-        self._dispatch('submit')
+        self._submit()
 
 
 class MultiSelect(Select):

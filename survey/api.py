@@ -74,7 +74,7 @@ def _respond(full, color, draw, delimit):
     result = delimit.join(results)
 
     if not full:
-        result += _assets.fall * os.linesep
+        result = _assets.fall * os.linesep + result
 
     _assets.caption.finish(result, full = full)
 

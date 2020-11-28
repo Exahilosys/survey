@@ -1,11 +1,14 @@
 import setuptools
+import os
 
 with open('README.rst') as file:
     readme = file.read()
 
 name = 'survey'
 
-version = '2.1.3'
+github_version = os.getenv('GITHUB_VERSION')
+github_version_parts = github_version.split('/')
+version = github_version_parts[-1].lrstrip('v')
 
 author = 'Exahilosys'
 

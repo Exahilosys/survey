@@ -562,6 +562,10 @@ class LineEditor(Machine):
 
         return change
 
+    def move(self, left, size):
+
+        self._move_x(left, size)
+
     def _ensure(self, runes):
 
         value = ''.join(runes)
@@ -843,6 +847,10 @@ class MultiLineEditor(Machine, Originful):
 
         return (ysize, xsize)
 
+    def move(self, left, size):
+
+        self._move_x(left, size)
+
     def _ensure(self, runes):
 
         esize = len(runes)
@@ -950,12 +958,13 @@ class Select(Machine, Originful):
                  indent,
                  funnel,
                  filter,
+                 index,
                  *args,
                  **kwargs):
 
         Machine.__init__(self, io, cursor, height - 1, *args, **kwargs)
 
-        self._index = 0
+        self._index = index
 
         self._options = options
         self._visible = tuple(range(len(options)))
@@ -1109,6 +1118,10 @@ class Select(Machine, Originful):
             self._redraw()
         else:
             self._show(self._visible[index], True)
+
+    def move(self, up, size):
+
+        self._move_y(up, size)
 
     def _specify(self, new):
 

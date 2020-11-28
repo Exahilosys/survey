@@ -268,7 +268,14 @@ def edit(prompt = None,
     return value
 
 
-def _select_single(my, mx, options, prefix, indent, funnel, filter, callback):
+def _select_single(my, mx,
+                   options,
+                   prefix,
+                   indent,
+                   funnel,
+                   filter,
+                   index,
+                   callback):
 
     select = tools.Select(
         _io,
@@ -280,6 +287,7 @@ def _select_single(my, mx, options, prefix, indent, funnel, filter, callback):
         indent,
         funnel,
         filter,
+        index,
         callback = callback
     )
 
@@ -292,6 +300,7 @@ def _select_multi(my, mx,
                   indent,
                   funnel,
                   filter,
+                  index,
                   unpin,
                   pin,
                   indexes,
@@ -310,6 +319,7 @@ def _select_multi(my, mx,
         indent,
         funnel,
         filter,
+        index,
         callback = callback
     )
 
@@ -343,6 +353,7 @@ def select(options,
            funnel = None,
            filter = None,
            limit = 6,
+           index = 0,
            unpin = '[ ] ',
            pin = '[X] ',
            indexes = (),
@@ -368,6 +379,8 @@ def select(options,
         Used with current ``(option)`` and must return some :class:`str`.
     :param int limit:
         Max amount of options displayed at any point.
+    :param int index:
+        Where to place the cursor upon initial draw.
     :param str unpin:
         Indicator for un-selected items (multi only).
     :param str pin:
@@ -417,6 +430,7 @@ def select(options,
             indent,
             funnel,
             filter,
+            index,
             unpin,
             pin,
             indexes,
@@ -430,6 +444,7 @@ def select(options,
             indent,
             funnel,
             filter,
+            index,
             callback
         )
 

@@ -339,7 +339,9 @@ def _traverse(path, show, able, next, *args, look = False, **kwargs):
 
     if show:
         showpath = show(path)
-        template = template.format('{0}', showpath)
+        hint = template.format('{0}', showpath)
+    else:
+        hint = template
 
     check = kwargs.pop('check', None)
 
@@ -353,7 +355,7 @@ def _traverse(path, show, able, next, *args, look = False, **kwargs):
         displays,
         *args,
         **kwargs,
-        hint = template,
+        hint = hint,
         check = subcheck,
         callback = track.invoke
     )
@@ -368,7 +370,18 @@ def _traverse(path, show, able, next, *args, look = False, **kwargs):
 
     api.respond(shows = (), full = True)
 
-    return _traverse(path, show, able, next, *args, check = check, **kwargs)
+    result = _traverse(
+        path,
+        show,
+        able,
+        next,
+        *args,
+        **kwargs,
+        check = check,
+        hint = template
+    )
+
+    return result
 
 
 def traverse(initial, show, able, next, *args, **kwargs):
@@ -391,8 +404,7 @@ def traverse(initial, show, able, next, *args, **kwargs):
     :param bool look:
         Whether to assess if any option is advancable.
 
-    ``show`` result is formatted on first placeholder (``{0}``) and filter value
-    on second (``{1}``).
+    ``show`` result is formatted on second placeholder.
 
     ``check`` takes ``(path, option)``.
     """

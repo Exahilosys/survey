@@ -966,6 +966,8 @@ class Select(Machine, Originful):
 
         self._index = index
 
+        self._calibrate()
+
         self._options = options
         self._visible = tuple(range(len(options)))
         self._changed = {}

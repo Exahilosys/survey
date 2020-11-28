@@ -88,15 +88,19 @@ def password(*args, rune = '*', color = '\x1b[90m', **kwargs):
         print(f'Singing in with {answer}...')
     """
 
-    ofunnel = kwargs.pop('funnel', None)
-    nfunnel = lambda _: rune
+    helpers.exclude_arg(kwargs, 'funnel')
 
-    funnel = helpers.combine_functions(ofunnel, nfunnel)
+    def funnel(value):
+        result = rune
+        return result
+
+    helpers.exclude_arg(kwargs, 'view')
 
     def view(value):
-        return (len(value) * rune,)
+        result = len(value) * rune
+        return (result,)
 
-    result = input(*args, view = view, **kwargs, color = color, funnel = funnel)
+    result = input(*args, funnel = funnel, view = view, color = color, **kwargs)
 
     return result
 
@@ -174,6 +178,12 @@ def confirm(*args,
         color = kwargs.get('color', _default_color)
         kwargs['hint'] = utils.hint.confirm(template, default, color = color)
 
+    helpers.exclude_arg(kwargs, 'limit')
+
+    limit = max(map(len, itertools.chain.from_iterable(sentiments)))
+
+    helpers.exclude_arg(kwargs, 'check')
+
     index = None
     def check(value):
         if value:
@@ -189,7 +199,7 @@ def confirm(*args,
             return False
         return True
 
-    limit = max(map(len, itertools.chain.from_iterable(sentiments)))
+    helpers.exclude_arg(kwargs, 'view')
 
     value = None
     def view(_):
@@ -201,9 +211,9 @@ def confirm(*args,
     input(
         *args,
         **kwargs,
-        view = view,
         limit = limit,
-        check = check
+        check = check,
+        view = view
     )
 
     return value
@@ -237,10 +247,7 @@ def _select_hint(template, callback, external = True):
     return (callback, hint)
 
 
-def _select(*args,
-            color = _default_color,
-            erase = False,
-            **kwargs):
+def _select(*args, color = _default_color, **kwargs):
 
     if not 'hint' in kwargs:
         multi = kwargs.get('multi', False)
@@ -304,13 +311,15 @@ def select(*args, color = _default_color, erase = False, view = None, **kwargs):
     return result
 
 
-def _traverse(path, show, able, next, *args, look = False, **kwargs):
+def _traverse(trail, show, able, next, *args, look = False, **kwargs):
 
-    (options, displays) = next(path)
+    settings = kwargs.copy()
+
+    (options, displays) = next(trail)
 
     track = wrapio.Track()
 
-    wall = not len(path) > 1
+    wall = not len(trail) > 1
     back = None
 
     @track.call
@@ -321,7 +330,7 @@ def _traverse(path, show, able, next, *args, look = False, **kwargs):
                 raise api.Abort()
         else:
             option = options[index]
-            if not able(path, option):
+            if not able(trail, option):
                 raise api.Abort()
         back = left
         api.finish(True)
@@ -330,7 +339,7 @@ def _traverse(path, show, able, next, *args, look = False, **kwargs):
         template = kwargs.pop('hint')
     except KeyError:
         instructs = _select_hint_template_instructs(False)
-        if any(able(path, option) for option in options):
+        if not look or any(able(trail, option) for option in options):
             instructs.append('next: →')
         if not wall:
             instructs.append('back: ←')
@@ -338,48 +347,50 @@ def _traverse(path, show, able, next, *args, look = False, **kwargs):
         template = '{1}' + template
 
     if show:
-        showpath = show(path)
-        hint = template.format('{0}', showpath)
+        showtrail = show(trail)
+        template = template.format('{0}', showtrail)
     else:
-        hint = template
+        template = template
 
-    check = kwargs.pop('check', None)
+    kwargs['hint'] = template
 
-    def subcheck(index):
-        if back is None:
-            option = options[index]
-            return not check or check(path, option)
-        return True
+    try:
+        index = kwargs.pop('index')
+    except KeyError:
+        pass
+    else:
+        subindex = index(trail, options)
+        kwargs['index'] = subindex
 
-    index = _select(
-        displays,
-        *args,
-        **kwargs,
-        hint = hint,
-        check = subcheck,
-        callback = track.invoke
-    )
+    try:
+        check = kwargs.pop('check')
+    except KeyError:
+        pass
+    else:
+        def subcheck(index):
+            if back is None:
+                option = options[index]
+                return not check or check(trail, option)
+            return True
+        kwargs['check'] = subcheck
+
+    callback = kwargs.get('callback', None)
+    subcallback = helpers.succeed_functions(track.invoke, callback)
+    kwargs['callback'] = subcallback
+
+    index = _select(displays, *args, **kwargs)
 
     if back is True:
-        path.pop()
+        trail.pop()
     else:
         option = options[index]
-        path.append(option)
+        trail.append(option)
         if back is None:
-            return path
+            return trail
 
     api.respond(shows = (), full = True)
 
-    result = _traverse(
-        path,
-        show,
-        able,
-        next,
-        *args,
-        **kwargs,
-        check = check,
-        hint = template
-    )
+    result = _traverse(trail, show, able, next, *args, **settings)
 
     return result
 
@@ -394,19 +405,22 @@ def traverse(initial, show, able, next, *args, **kwargs):
     :param object initial:
         Used on ``next`` to determine options.
     :param func show:
-        Called with ``(path)``; should return :class:`str` for hint formatting.
+        Called with ``(trail)``; should return :class:`str` for hint formatting.
     :param func able:
-        Called with ``(path, option)``; should return :class:`bool` for
+        Called with ``(trail, option)``; should return :class:`bool` for
         whether advancement is possible.
     :param func next:
-        Called with ``(path)``; should return ``(options, displays)`` with
+        Called with ``(trail)``; should return ``(options, displays)`` with
         latter used for drawing and former for selecting.
     :param bool look:
         Whether to assess if any option is advancable.
 
-    ``show`` result is formatted on second placeholder.
+    ``show`` result is formatted on second placeholder(``{1}``).
 
-    ``check`` takes ``(path, option)``.
+    ``check`` takes ``(trail, option)``.
+
+    ``index`` is ``func`` taking ``(trail, options)`` and should return
+    :type:`int`.
     """
 
     if 'multi' in kwargs:
@@ -416,15 +430,15 @@ def traverse(initial, show, able, next, *args, **kwargs):
     color = kwargs.pop('color', _default_color)
     erase = kwargs.pop('erase', False)
 
-    path = [initial]
+    trail = [initial]
 
-    _traverse(path, show, able, next, *args, **kwargs)
+    _traverse(trail, show, able, next, *args, **kwargs)
 
-    shows = None if view is None else view(path)
+    shows = None if view is None else view(trail)
 
     api.respond(shows = shows, color = color, full = erase)
 
-    return path
+    return trail
 
 
 _path_units = ('f', '/', 'd')
@@ -453,6 +467,8 @@ def path(directory,
         Works same as in :func:`.traverse`, but changed using memoization.
 
     ``check`` takes ``(path)``
+
+    ``index`` takes ``(path, options)``
     """
 
     def make(trail, *rest):
@@ -469,6 +485,7 @@ def path(directory,
     @functools.lru_cache(None)
     def contents(path):
         names = os.listdir(path)
+        names = sorted(names) # qof
         stick = lambda name: os.path.join(path, name)
         paths = map(stick, names)
         if able:
@@ -501,18 +518,40 @@ def path(directory,
         return (names, shows)
 
     try:
+        index = kwargs['index']
+    except KeyError:
+        pass
+    else:
+        def subindex(trail, parts):
+            path = make(trail)
+            result = index(path, parts)
+            return result
+        kwargs['index'] = subindex
+
+    try:
         check = kwargs['check']
     except KeyError:
         pass
     else:
         def subcheck(trail, part):
             path = make(trail, part)
-            return check(path)
+            result = check(path)
+            return result
         kwargs['check'] = subcheck
 
-    def view(trail):
+    def subview(trail):
         path = make(trail)
         return (path,)
+    try:
+        view = kwargs['view']
+    except KeyError:
+        pass
+    else:
+        def subview(*args, _pre = subview):
+            result = _pre(*args)
+            result = view(result[0])
+            return result
+    kwargs['view'] = subview
 
     directory = os.path.join(directory, '') # ensure "/"
 
@@ -522,9 +561,8 @@ def path(directory,
         able_,
         next,
         *args,
-        **kwargs,
         look = look,
-        view = view
+        **kwargs
     )
 
     result = make(trail)

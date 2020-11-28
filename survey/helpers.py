@@ -219,3 +219,9 @@ def multifilter(*args, **kwargs):
     result = _multifilter(*args, **kwargs)
 
     return zip(*result)
+
+
+def exclude_arg(kwargs, key, message = '{0} is overwritten'):
+    if not key in kwargs:
+        return
+    raise ValueError(message.format(key))

@@ -335,10 +335,11 @@ def _traverse(path, show, able, next, *args, look = False, **kwargs):
         if not wall:
             instructs.append('back: ←')
         template = _select_hint_template(instructs)
+        template = '{1}' + template
 
     if show:
         showpath = show(path)
-        template = template.format(showpath, '{0}')
+        template = template.format('{0}', showpath)
 
     check = kwargs.pop('check', None)
 
@@ -449,6 +450,7 @@ def path(directory,
 
     def show(trail):
         path = make(trail)
+        path = os.path.join(path, '')
         path = helpers.paint(path, color)
         return path
 

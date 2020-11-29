@@ -8,6 +8,8 @@
 
 #### Fixes
 
+- \#8 inconsistent coloring of the default hint for `confirm`
+
 ## v2.1.5
 
 #### Fixes

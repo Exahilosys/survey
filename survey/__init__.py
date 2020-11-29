@@ -174,9 +174,10 @@ def confirm(*args,
     """
 
     if not 'hint' in kwargs:
-        template = helpers.paint('({0}/{1}) ', _colors.hint)
+        template = '({0}/{1}) '
         color = kwargs.get('color', _default_color)
-        kwargs['hint'] = utils.hint.confirm(template, default, color = color)
+        hint = utils.hint.confirm(template, default, color = color)
+        kwargs['hint'] = helpers.paint(hint, _colors.hint)
 
     helpers.exclude_arg(kwargs, 'limit')
 

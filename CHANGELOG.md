@@ -8,4 +8,10 @@
 
 #### Fixes
 
-## v0.0.0
+## v2.1.4
+
+#### Changes
+
+- README syntax is not RST.
+
+## v2.1.3

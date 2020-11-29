@@ -8,7 +8,7 @@ name = 'survey'
 
 github_version = os.getenv('GITHUB_VERSION')
 github_version_parts = github_version.split('/')
-version = github_version_parts[-1].lrstrip('v')
+version = github_version_parts[-1].lstrip('v')
 
 author = 'Exahilosys'
 

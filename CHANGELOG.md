@@ -8,7 +8,12 @@
 
 #### Fixes
 
+## v2.1.6
+
+#### Fixes
+
 - \#8 inconsistent coloring of the default hint for `confirm`
+- Installing through Github and release assets should now work.
 
 ## v2.1.5
 

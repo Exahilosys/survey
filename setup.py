@@ -1,5 +1,4 @@
 import setuptools
-import os
 
 with open('README.rst') as file:
     readme = file.read()
@@ -10,7 +9,7 @@ version = '2.2.1'
 
 author = 'Exahilosys'
 
-url = f'https://github.com/{author}/{name}'
+url = 'https://github.com/{0}/{1}'.format(author, name)
 
 setuptools.setup(
     name = name,

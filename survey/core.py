@@ -793,6 +793,7 @@ def path(directory, *args, units = None, allow = None, **kwargs):
 
     .. note::
 
+        - ``jump`` takes ``(path, options)``
         - ``check`` takes ``(path)``
         - ``index`` takes ``(path, options)``
     """
@@ -844,6 +845,17 @@ def path(directory, *args, units = None, allow = None, **kwargs):
             show = name + ' ' * push + unit
             shows.append(show)
         return (names, shows)
+
+    try:
+        subjump = kwargs['jump']
+    except KeyError:
+        pass
+    else:
+        def jump(trail, parts):
+            path = make(trail)
+            result = subjump(path, parts)
+            return result
+        kwargs['jump'] = jump
 
     try:
         subindexer = kwargs['index']

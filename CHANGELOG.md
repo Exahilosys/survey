@@ -8,6 +8,34 @@
 
 #### Fixes
 
+## v2.2.0
+
+#### Additions
+
+- Added `note`: A symbol coming before `prompt`.
+- Added `info`: Updatable text coming after `prompt` and before `hint`.
+- Added `indent` for `MultiLineEditor`: The amount of spaces for each tab.
+- Added `jump` in `traverse`: A function deciding which index tab advances to.
+- Added `Theme`: A data-like class used by `use` to overwrite global behavior.
+- Added `auto` argument in almost every routine. Used to determine whether to respond immediately.
+
+#### Changes
+
+- Renamed modules and moved around classes to more specific places.
+- Revamped `api.py` and modules around it to better house new features.
+- `hint` is now static and cannot be updated. Use `info` instead.
+- Exposed `respond` for when `auto` is `False`.
+- Updated documentation to match new changes.
+
+#### Removals
+
+- Removed the `view`, `color` and `erase` from every routine in favor of `auto`.
+- Removed `utils.py` as hints are now made directly via routines in `core.py`.
+
+#### Fixes
+
+- `helpers.paint` now accommodates more cases of ANSI-SGR sequence injecting.
+
 ## v2.1.6
 
 #### Fixes

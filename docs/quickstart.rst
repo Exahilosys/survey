@@ -23,7 +23,7 @@ Supporting line breaks can be done by passing ``multi = True``.
 
 .. code-block:: py
 
-    secret = survey.password('Password: ')
+    secret = survey.password('Type your password: ')
     print(f'Answered {secret}.')
 
 .. image:: /_static/images/edit2.gif
@@ -43,11 +43,11 @@ Supporting line breaks can be done by passing ``multi = True``.
 .. code-block:: py
 
     guess = survey.question('Capital of Hungary: ')
-    (survey.accept if guess == 'Budapest' else survey.reject)()
+    survey.accept(guess == 'Budapest')
 
-    hint = '\x1b[90m(fahrenheit)\x1b[0m ' # ansi color codes
+    hint = '(fahrenheit) '
     guess = survey.question('Burning point of paper: ', hint = hint)
-    (survey.accept if guess == '451' else survey.reject)()
+    survey.accept(guess == '451')
 
 .. image:: /_static/images/edit4.gif
 
@@ -65,26 +65,47 @@ Multiple option selection can be done by passing ``multi = True``.
 
 .. code-block:: py
 
-    days = ('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday')
-
-    template = '\x1b[90m[filter: {0} | move: ↑↓ | pick: → all: →→ | unpick: ← all: ←←]\x1b[0m'
-    instruct = 'type'
-
-    def callback(event, indexes, *args):
-        if event == 'filter':
-            (value,) = args
-            show = value or instruct
-            hint = template.format(show)
-            survey.update(hint)
-
-    hint = template.format(instruct)
-    indexes = survey.select(days, 'Favourite days? ', multi = True, hint = hint, limit = None, callback = callback)
-
-    days = [days[index] for index in sorted(indexes)] # indexes is a set
-    print(f'Answered {days}.')
+    days = ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
+    indexes = survey.select(days, 'Favourite days? ', multi = True, limit = 4)
+    print(f'Answered {indexes}.')
 
 .. image:: /_static/images/select1.gif
 
-The last example is a bit more complicated for the sake of showcasing a bit more of what's possible.
+There's also plenty of options for customisation (`colors <https://en.wikipedia.org/wiki/ANSI_escape_code#Colors>`_).
 
-Head over to :ref:`Reference` and dig into the finner details!
+.. code-block:: py
+
+    theme = survey.Theme(
+        symbol = survey.Symbol(
+            note = '! '
+        ),
+        palette = survey.Palette(
+            note = '\x1b[33m', # yellow fg
+            info = '\x1b[35m'  # magenta fg
+        )
+    )
+
+    days = ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
+
+    with survey.use(theme):
+        indexes = survey.select(
+            days,
+            'Favourite days? ',
+            multi = True,
+            limit = 4,
+            indent = 0,
+            funnel = lambda i, v: v.upper(),
+            prefix = '~ ',
+            unpin = '[\x1b[31m✕\x1b[0m] ', # green fg + null
+            pin = '[\x1b[32m✓\x1b[0m] ', # red fg + null
+            color = '\x1b[33m', # yellow fg
+            indexes = {1, 2, 4},
+            check = lambda indexes: not 4 in indexes,
+            hint = '(cannot submit with friday)'
+        )
+
+    print(f'Answered {indexes}.')
+
+.. image:: /_static/images/theme.gif
+
+Head over to :ref:`Reference` and dig into the finer details!

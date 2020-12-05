@@ -1,321 +1,1266 @@
+import enum
+import types
+import wrapio
 import os
-import collections
-import itertools
 
-from . import bases
 from . import helpers
 
 
-__all__ = ('Display', 'Caption', 'LineEditor', 'MultiLineEditor', 'Select',
+__all__ = ('Source', 'Translator', 'LineEditor', 'MultiLineEditor', 'Select',
            'MultiSelect')
 
 
-class Display:
+class Source(helpers.Handle):
 
-    _Visual = collections.namedtuple('Visual', 'dirty ready clean')
+    """
+    Turns stdin reads into events.
+    """
 
-    __slots__ = ('_io', '_cursor', '_visuals', '_origin', '_width')
+    Event = enum.Enum(
+        'Event',
+        'move_left move_right jump_left jump_right move_up move_down '
+        'delete_left delete_right escape indent enter insert'
+    )
 
-    def __init__(self, io, cursor):
+    _events = types.SimpleNamespace(
+        arrows = {
+            'D': Event.move_left,
+            'C': Event.move_right,
+            'A': Event.move_up,
+            'B': Event.move_down
+        },
+        normal = {
+            '\x0d': Event.enter,
+            '\x0a': Event.enter,
+            '\x7f': Event.delete_left,
+            '\x08': Event.delete_right,
+            '\x09': Event.indent
+        },
+        special = {
+            '': Event.escape,
+            'b': Event.jump_left,
+            'f': Event.jump_right
+        }
+    )
+
+    __slots__ = ('_io', '_done')
+
+    def __init__(self, io, *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+
+        self._io = io
+
+        self._done = False
+
+    def _escape(self):
+
+        key = self._io.recv(False)
+
+        if key == '[':
+            key = self._io.recv()
+            events = self._events.arrows
+        else:
+            events = self._events.special
+
+        return (events, key)
+
+    def _advance(self):
+
+        key = self._io.recv()
+
+        if key == '\x1b':
+            (events, key) = self._escape()
+        else:
+            events = self._events.normal
+
+        event = events.get(key, self.Event.insert)
+
+        self._dispatch(event, key)
+
+    def done(self):
+
+        self._done = True
+
+    def stream(self):
+
+        with self._io.atomic:
+            while not self._done:
+                self._advance()
+
+        self._done = False
+
+
+class Abort(Exception):
+
+    """
+    Raise when something's wrong.
+    """
+
+    __slots__ = ()
+
+
+class Translator(helpers.Handle):
+
+    """
+    Combines related io events into single events with relevant info.
+
+    .. code-block: python
+
+        translator = Translator(callback = ...)
+        source = Source(io, callback = translator.invoke)
+    """
+
+    Event = enum.Enum(
+        'Event',
+        'move_x jump_x move_y delete insert enter'
+    )
+
+    __slots__ = ('_io',)
+
+    def __init__(self, io, *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+
+        self._io = io
+
+    def _move_x(self, left):
+
+        self._dispatch(self.Event.move_x, left)
+
+    @wrapio.event(Source.Event.move_left)
+    def _nnc(self, key):
+
+        self._move_x(True)
+
+    @wrapio.event(Source.Event.move_right)
+    def _nnc(self, key):
+
+        self._move_x(False)
+
+    def _jump_x(self, left):
+
+        self._dispatch(self.Event.jump_x, left)
+
+    @wrapio.event(Source.Event.jump_left)
+    def _nnc(self, key):
+
+        self._jump_x(True)
+
+    @wrapio.event(Source.Event.jump_right)
+    def _nnc(self, key):
+
+        self._jump_x(False)
+
+    def _move_y(self, up):
+
+        self._dispatch(self.Event.move_y, up)
+
+    @wrapio.event(Source.Event.move_up)
+    def _nnc(self, key):
+
+        self._move_y(True)
+
+    @wrapio.event(Source.Event.move_down)
+    def _nnc(self, key):
+
+        self._move_y(False)
+
+    def _delete(self, left):
+
+        self._dispatch(self.Event.delete, left)
+
+    @wrapio.event(Source.Event.delete_left)
+    def _nnc(self, key):
+
+        self._delete(True)
+
+    @wrapio.event(Source.Event.delete_right)
+    def _nnc(self, key):
+
+        self._delete(False)
+
+    def _insert(self, key):
+
+        self._dispatch(self.Event.insert, key)
+
+    @wrapio.event(Source.Event.insert)
+    def _nnc(self, key):
+
+        self._insert(key)
+
+    @wrapio.event(Source.Event.indent)
+    def _nnc(self, key):
+
+        self._insert('\t')
+
+    def _enter(self, key):
+
+        self._dispatch(self.Event.enter, key)
+
+    @wrapio.event(Source.Event.enter)
+    def _nnc(self, key):
+
+        self._enter(key)
+
+    def invoke(self, *args, **kwargs):
+
+        try:
+            fail = super().invoke(*args, **kwargs)
+        except Abort:
+            fail = True
+        else:
+            if fail:
+                return
+            fail = False
+
+        if fail:
+            self._io.ring()
+
+        return fail
+
+
+class WindowView:
+
+    """
+    ABC for classes implementing something that can be partially viewed.
+    """
+
+    __slots__ = () # ('_index', '_lower', '_bound') on each subclass
+
+    def __init__(self, bound):
+
+        self._index = 0
+        self._lower = 0
+        self._bound = bound
+
+    @property
+    def _upper(self):
+
+        return self._lower + self._bound
+
+    @property
+    def _among(self):
+
+        return self._index - self._lower
+
+    @property
+    def among(self):
+
+        return self._among
+
+    @property
+    def index(self):
+
+        return self._index
+
+    def _calibrate(self):
+
+        if self._index < self._lower:
+            # |[abc] <- [|ab]c
+            self._lower = self._index
+        elif self._index > self._upper:
+            # [abc]| -> a[bc|]
+            self._lower = self._index - self._bound
+        else:
+            return False
+
+        return True
+
+    def _resize(self, size):
+
+        bound = self._bound + size
+
+        if bound < 0:
+            raise ValueError('bound would be negative')
+
+        self._bound += size
+
+        if size > 0:
+            self._lower = max(0, self._lower - size)
+
+        self._calibrate()
+
+    def _reset(self):
+
+        self._index = 0
+        self._lower = 0
+
+
+class Tool(WindowView, helpers.Handle):
+
+    """
+    ABC for partially-viewable handlers.
+    """
+
+    __slots__ = ('_index', '_lower', '_bound', '_io', '_cursor')
+
+    def __init__(self, io, cursor, bound, *args, **kwargs):
+
+        WindowView.__init__(self, bound)
+        helpers.Handle.__init__(self, *args, **kwargs)
 
         self._io = io
         self._cursor = cursor
 
-        self._visuals = []
-        self._origin = None
+    def _clear(self):
 
-        self._width = None
+        raise NotImplementedError()
+
+    def clear(self):
+
+        self._clear()
+
+    def _draw(self, lower):
+
+        raise NotImplementedError()
+
+    def draw(self):
+
+        self._draw(self._lower)
+
+    def _focus(self):
+
+        raise NotImplementedError()
+
+    def focus(self):
+
+        self._focus()
+
+    def _redraw(self, skip = False):
+
+        if not skip:
+            self._clear()
+
+        self._draw(self._lower)
+
+        self._focus()
+
+    def resize(self, size, full = True):
+
+        if full:
+            self._clear()
+
+        self._resize(size)
+
+        if full:
+            self._redraw(skip = True)
+
+    def _move_y(self, up, size):
+
+        pass
+
+    def _e_move_y(self, up, size):
+
+        self._move_y(up, size)
+
+        self._dispatch('move_y', up, size)
+
+    @wrapio.event(Translator.Event.move_y)
+    def _nnc(self, up):
+
+        self._e_move_y(up, 1)
+
+    def _move_x(self, left, size):
+
+        pass
+
+    def _e_move_x(self, left, size):
+
+        self._move_x(left, size)
+
+        self._dispatch('move_x', left, size)
+
+    @wrapio.event(Translator.Event.move_x)
+    def _nnc(self, left):
+
+        self._e_move_x(left, 1)
+
+    def _tab(self):
+
+        pass
+
+    def _e_tab(self):
+
+        self._tab()
+
+        self._dispatch('tab')
+
+    def _insert(self, runes):
+
+        pass
+
+    def _e_insert(self, runes):
+
+        if '\t' in runes:
+            self._e_tab()
+            return
+
+        runes = self._insert(runes)
+
+        self._dispatch('insert', runes)
+
+    def insert(self, runes):
+
+        self._e_insert(runes)
+
+    @wrapio.event(Translator.Event.insert)
+    def _nnc(self, rune):
+
+        runes = (rune,)
+
+        self._e_insert(runes)
+
+    def _delete(self, left, size):
+
+        pass
+
+    def _e_delete(self, left, size):
+
+        self._delete(left, size)
+
+        self._dispatch('delete', left, size)
+
+    def delete(self, left, size):
+
+        self._e_delete(left, size)
+
+    @wrapio.event(Translator.Event.delete)
+    def _nnc(self, left):
+
+        self._e_delete(left, 1)
+
+    def _submit(self):
+
+        self._dispatch('submit')
+
+    def _enter(self):
+
+        raise NotImplementedError()
+
+    @wrapio.event(Translator.Event.enter)
+    def _nnc(self, rune):
+
+        self._enter()
+
+
+def _clean(value):
+
+    value = helpers.seq.clean(value)
+    value = helpers.clean(value)
+
+    return value
+
+
+class LineEditor(Tool):
+
+    """
+    Use for editing a single line of text.
+
+    Does not support line breaks or moving vertically.
+    """
+
+    __slots__ = ('_limit', '_funnel', '_buffer')
+
+    def __init__(self,
+                 io,
+                 cursor,
+                 value,
+                 width,
+                 limit,
+                 funnel,
+                 *args,
+                 **kwargs):
+
+        super().__init__(io, cursor, width, **kwargs)
+
+        self._limit = limit
+
+        self._funnel = funnel
+
+        self._buffer = list(value)
 
     @property
-    def visuals(self):
+    def buffer(self):
 
-        return self._visuals
+        return self._buffer
 
-    def reset(self):
+    def _place(self):
 
-        self._visuals.clear()
+        self._cursor.left(self._among)
 
-    def resize(self, width):
+    def _clear(self):
 
-        self._width = width
+        self._place()
 
-    def _locate(self):
+        self._cursor.erase()
+
+    def _transform(self, rune):
+
+        rune = self._funnel(rune)
+
+        if not len(rune) == 1:
+            raise RuntimeError('rune must be of size 1')
+
+        if not rune.isprintable():
+            raise RuntimeError('rune must be printable')
+
+        return rune
+
+    def _show(self, runes):
+
+        if self._funnel:
+            runes = map(self._transform, runes)
+
+        runes = tuple(runes)
+
+        value = ''.join(runes)
+
+        self._io.send(value)
+
+    def _chunk(self, lower):
+
+        runes = self._buffer[lower:self._upper]
+
+        return runes
+
+    def _draw(self, lower):
+
+        runes = self._chunk(lower)
+
+        self._show(runes)
+
+    @property
+    def _shown(self):
+
+        return len(self._chunk(self._lower))
+
+    def _focus(self):
+
+        size = self._shown - self._among
+
+        self._cursor.left(size)
+
+    def _move_x(self, left, size):
+
+        if left:
+            limit = self._index
+        else:
+            limit = len(self._buffer) - self._index
+
+        excess = size - limit
+        if excess > 0:
+            raise Abort(excess)
+
+        if left:
+            index = self._index - size
+            limit = self._among
+            self._cursor.left(min(limit, size))
+        else:
+            index = self._index + size
+            limit = self._shown - self._among
+            self._cursor.right(min(limit, size))
+
+        self._index = index
+
+        change = self._calibrate()
+
+        if change:
+            self._redraw()
+
+        return change
+
+    def move(self, left, size):
+
+        self._move_x(left, size)
+
+    def _ensure(self, runes):
+
+        value = ''.join(runes)
+        value = _clean(value)
+
+        return value
+
+    def _insert(self, runes):
+
+        runes = self._ensure(runes)
+        runes = tuple(runes)
+
+        esize = len(runes)
+        osize = len(self._buffer)
+        nsize = osize + esize
+
+        if not self._limit is None and nsize > self._limit:
+            raise Abort()
+
+        start = self._index
+
+        for (index, rune) in enumerate(runes):
+            self._buffer.insert(start + index, rune)
+
+        among = not start == osize
+
+        self._index = start + esize
+
+        change = self._calibrate()
+
+        if change:
+            self._redraw()
+        elif among:
+            self._draw(start)
+            self._focus()
+        else:
+            self._show(runes)
+
+        return runes
+
+    def _delete(self, left, size):
+
+        if left:
+            self._move_x(True, size)
+
+        limit = len(self._buffer) - self._index
+
+        excess = size - limit
+        if excess > 0:
+            raise Abort(excess)
+
+        for _ in range(size):
+            del self._buffer[self._index]
+
+        self._cursor.erase()
+
+        self._draw(self._index)
+
+        self._focus()
+
+    @wrapio.event(Translator.Event.delete)
+    def _nnc(self, left):
+
+        self._delete(left, 1)
+
+    def _enter(self):
+
+        self._submit()
+
+
+class Originful:
+
+    __slots__ = () # ('_origin',) on each subclass
+
+    def _originate(self):
 
         (cy, cx) = self._cursor.locate()
 
         self._origin = cx - 1
 
-    def locate(self):
 
-        self._locate()
+class MultiLineEditor(Tool, Originful):
 
-    def _originate(self, index):
+    """
+    Use for editing multiple lines of text.
 
-        if index < 0:
-            return self._origin
+    Supports line breaks or moving vertically.
+    """
 
-        visual = self._visuals[index]
+    __slots__ = ('_origin', '_finchk', '_subs', '_make', '_limit', '_indent')
 
-        lines = visual.clean.rsplit(os.linesep, 1)
-        origin = len(lines.pop()) # removes last
+    def __init__(self,
+                 io,
+                 cursor,
+                 value,
+                 finchk,
+                 height,
+                 width,
+                 limit,
+                 funnel,
+                 indent,
+                 *args,
+                 **kwargs):
 
-        if not lines: # checks if empty
-            origin += self._originate(index - 1)
+        Tool.__init__(self, io, cursor, height - 1, *args, **kwargs)
 
-        return origin
+        self._finchk = finchk
 
-    def _draw(self, index):
+        make = lambda value: LineEditor(io, cursor, value, width, None, funnel)
 
-        visuals = self._visuals[index:]
+        self._subs = list(map(make, value.split(os.linesep)))
 
-        for visual in visuals:
-            self._io.send(visual.ready)
+        self._make = lambda: make('')
 
-    def _clear(self, index):
+        self._limit = limit
 
-        visuals = self._visuals[index:]
+        self._indent = indent
 
-        ysize = 0
-        for visual in visuals:
-            ysize += visual.clean.count(os.linesep)
+        self._originate()
 
-        self._cursor.last(ysize)
+    @property
+    def _sub(self):
 
-        xsize = self._originate(index - 1)
+        return self._subs[self._index]
 
-        self._cursor.right(xsize)
+    @property
+    def subs(self):
+
+        return self._subs
+
+    def _place(self):
+
+        self._cursor.last(self._among)
+        self._cursor.right(self._origin)
+
+    def _clear(self):
+
+        self._place()
 
         self._cursor.clear()
 
-    @staticmethod
-    def _clean(value):
+    def _chunk(self, lower):
 
-        value = helpers.seq.clean(value)
-        runes = helpers.clean(value, keep = {os.linesep})
-        value = ''.join(runes)
+        upper = self._upper + 1
 
-        return value
+        runes = self._subs[lower:upper]
 
-    def _format(self, index, value):
+        return runes
 
-        clean = self._clean(value)
-        lines = clean.split(os.linesep)
+    def _draw(self, lower):
 
-        current = self._originate(index - 1)
+        self._originate()
 
-        # injects \n whenever part of each
-        # line is about to exceed the width
-        step = self._width
-        for (state, line) in enumerate(lines):
-            index = step
-            if not state:
-                index -= current
-            for cycle in itertools.count():
-                if not index < len(line):
-                    break
-                value = helpers.seq.inject(value, index + cycle, os.linesep)
-                index += step
+        subs = self._chunk(lower)
 
-        return value
+        last = len(subs) - 1
+        for (index, sub) in enumerate(subs):
+            sub.draw()
+            if index == last:
+                break
+            self._io.send(os.linesep)
 
-    def _build(self, index, dirty):
+    @property
+    def _shown(self):
 
-        ready = self._format(index, dirty)
-        clean = self._clean(ready)
+        return len(self._chunk(self._lower))
 
-        visual = self._Visual(dirty, ready, clean)
+    def _focus(self):
 
-        return visual
+        # if 1 shown and among 0, then move 0
+        ysize = self._shown - self._among - 1
 
-    def _insert(self, index, value):
+        self._cursor.last(ysize)
 
-        visual = self._build(index, value)
+        xsize = self._sub.among
 
-        self._visuals.insert(index, visual)
+        if not self._among:
+            xsize += self._origin
 
-        after = index + 1
-        values = []
+        self._cursor.right(xsize)
+
+    _SpotType = enum.Enum('SpotType', 'match left right')
+
+    def _spot(self, old, new, type):
+
+        to_left = - new.index
+        to_right = len(new.buffer) + to_left
+
+        if type is self._SpotType.match:
+            difference = old.index - new.index
+            size = max(to_left, min(to_right, difference))
+        elif type is self._SpotType.left:
+            size = to_left
+        elif type is self._SpotType.right:
+            size = to_right
+        else:
+            raise ValueError('unknown move type')
+
+        new.move(size < 0, abs(size))
+
+    def _move_y(self, up, size, type = _SpotType.match):
+
+        if up:
+            limit = self._index
+        else:
+            # if 1 sub and index 0, then limit is 0
+            limit = len(self._subs) - self._index - 1
+
+        excess = size - limit
+        if excess > 0:
+            raise Abort(excess)
+
+        if up:
+            index = self._index - size
+            limit = self._among
+            self._cursor.last(min(limit, size))
+        else:
+            index = self._index + size
+            limit = self._shown - self._among - 1
+            self._cursor.next(min(limit, size))
+
+        old = self._sub
+        self._index = index
+        new = self._sub
+
+        xsize = new.among
+        if not self._among:
+            xsize += self._origin
+        self._cursor.right(xsize)
+
+        change = self._calibrate()
+
+        if change:
+            self._redraw()
+
+        if not type is None:
+            self._spot(old, new, type)
+
+    def _rcut(self, left):
+
+        if left:
+            (*subs, sub) = self._subs[:self._index + 1]
+            buffer = sub.buffer[:sub.index]
+            subs = reversed(subs)
+        else:
+            (sub, *subs) = self._subs[self._index:]
+            buffer = sub.buffer[sub.index:]
+
+        buffers = (buffer, *(sub.buffer for sub in subs))
+
+        return buffers
+
+    def _rmsr(self, buffers, xsize):
+
+        ysize = 0
+        nsize = xsize
+        for buffer in buffers:
+            nsize -= len(buffer) + 1
+            if nsize < 0:
+                break
+            xsize = nsize
+            ysize += 1
+
+        return (ysize, xsize)
+
+    def _rclc(self, left, xsize):
+
+        buffers = self._rcut(left)
+
+        # remove one to account for current line
+        limit = sum(map(len, buffers)) + len(buffers) - 1
+
+        excess = xsize - limit
+        if excess > 0:
+            raise Abort(excess)
+
+        (ysize, xsize) = self._rmsr(buffers, xsize)
+
+        return (ysize, xsize)
+
+    def _move_x(self, left, xsize):
+
+        (ysize, xsize) = self._rclc(left, xsize)
+
+        if ysize:
+            type = self._SpotType.right if left else self._SpotType.left
+            self._move_y(left, ysize, type)
+
+        self._sub.move(left, xsize)
+
+        return (ysize, xsize)
+
+    def move(self, left, size):
+
+        self._move_x(left, size)
+
+    def _ensure(self, runes):
+
+        esize = len(runes)
+        buffers = tuple(sub.buffer for sub in self._subs)
+        osize = sum(map(len, buffers)) + len(buffers) - 1
+        nsize = osize + esize
+
+        if not self._limit is None and nsize > self._limit:
+            raise Abort()
+
+    def _tab(self):
+
+        self._insert((' ',) * self._indent)
+
+    def _insert(self, runes):
+
+        self._ensure(runes)
+
+        runes = self._sub.insert(runes)
+
+        return runes
+
+    def _delete(self, left, size):
+
+        if left:
+            self._move_x(True, size)
+
+        (ysize, xsize) = self._rclc(False, size)
+
+        kli = self._index + 1
+        sub = self._sub
+
+        for index in range(ysize):
+            nsub = self._subs.pop(kli)
+            sub.buffer.extend(nsub.buffer)
+
+        if ysize:
+            self._redraw()
+
+        sub.delete(False, size - ysize)
+
+    def _newsub(self):
+
+        old = self._sub
+
+        new = self._make()
+
         while True:
             try:
-                visual = self._visuals.pop(after)
+                rune = old.buffer.pop(old.index)
             except IndexError:
                 break
-            values.append(visual.dirty)
+            new.buffer.append(rune)
 
-        for (subindex, value) in enumerate(values, start = after):
-            visual = self._build(subindex, value)
-            self._visuals.insert(subindex, visual)
+        last = self._index == len(self._subs) - 1 and self._among < self._bound
+        full = not last
 
-        self._draw(index)
+        if full:
+            self._clear()
+        else:
+            self._cursor.erase()
 
-        return visual
+        index = self._index + 1
 
-    def _create(self, index, value):
+        self._subs.insert(index, new)
 
-        visual = self._insert(index, value)
+        self._index = index
 
-        return visual
+        runes = (os.linesep,)
 
-    def create(self, value, index = None):
+        if full:
+            self._calibrate()
+            self._redraw(skip = True)
+        else:
+            self._io.send(*runes)
+            self._draw(self._index)
+            self._focus()
 
-        if index is None:
-            index = len(self._visuals)
+        self._dispatch('insert', runes)
 
-        return self._create(index, value)
+    def newsub(self):
 
-    def _remove(self, index):
+        self._newsub()
 
-        self._clear(index)
+    def _enter(self):
 
-        visual = self._visuals.pop(index)
+        done = self._finchk()
 
-        return visual
+        (self._submit if done else self._newsub)()
 
-    def _delete(self, index):
 
-        visual = self._remove(index)
+class Select(Tool, Originful):
 
-        self._draw(index)
+    """
+    Use for cycling through and selecting options.
+    """
 
-        return visual
+    __slots__ = ('_origin', '_index', '_options', '_visible', '_changed',
+                 '_buffer', '_width', '_prefix', '_indent', '_funnel',
+                 '_filter')
 
-    def delete(self, index):
+    def __init__(self,
+                 io,
+                 cursor,
+                 height,
+                 width,
+                 options,
+                 prefix,
+                 indent,
+                 funnel,
+                 filter,
+                 index,
+                 *args,
+                 **kwargs):
 
-        return self._delete(index)
+        Tool.__init__(self, io, cursor, height - 1, *args, **kwargs)
 
-    def _update(self, index, value):
+        self._index = index
 
-        self._remove(index)
+        self._calibrate()
 
-        visual = self._insert(index, value)
+        self._options = options
+        self._visible = tuple(range(len(options)))
+        self._changed = {}
 
-        return visual
+        self._buffer = []
 
-    def update(self, index, value):
+        self._width = width
 
-        return self._update(index, value)
+        self._prefix = prefix
+        self._indent = indent
 
+        self._funnel = funnel
+        self._filter = filter
 
-class Caption:
+        self._originate()
 
-    __slots__ = ('_display',)
+    @property
+    def buffer(self):
 
-    def __init__(self, display):
+        return self._buffer
 
-        self._display = display
+    def _place(self):
 
-    def locate(self, width):
+        self._cursor.last(self._among)
+        self._cursor.right(self._origin)
 
-        self._display.locate()
+    def _clear(self):
 
-        self._display.resize(width)
+        self._place()
 
-    def create(self, prompt, custom, fall = 0):
+        self._cursor.clear()
 
-        values = [prompt, custom, fall * os.linesep]
+    def _tran(self, index, current, option):
 
-        for value in values:
-            if value is None:
-                value = ''
-            self._display.create(value)
+        return option
 
-    def update(self, custom):
+    def _chunk(self, lower):
 
-        self._display.update(1, custom)
+        return self._visible[lower:self._upper + 1]
 
-    def finish(self, custom, full = False):
+    def _fetch(self, index, current):
 
-        enter = not full
-        leave = len(self._display.visuals)
-        indexes = range(enter, leave)
-        for index in reversed(indexes):
-            self._display.delete(index)
+        option = self._options[index][:self._width]
 
-        self._display.create(custom)
+        if current:
+            try:
+                option = self._changed[index]
+            except KeyError:
+                if self._funnel:
+                    option = self._funnel(index, option)
+                self._changed[index] = option
 
-        self._display.reset()
+        prefix = self._prefix if current else ' ' * self._indent
 
+        option = prefix + self._tran(index, current, option)
 
-class Machine:
+        return option
 
-    __slots__ = ()
+    def _show(self, index, current):
 
-    def get(self):
+        self._cursor.erase()
 
-        raise NotImplementedError()
+        option = self._fetch(index, current)
 
-    def view(self, value):
+        self._io.send(option)
 
-        raise NotImplementedError()
+        self._cursor.goto(0)
 
+    def _draw(self, lower):
 
-class LineEditor(bases.LineEditor, Machine):
+        indexes = self._chunk(lower)
 
-    __slots__ = ()
+        options = []
+        for (cindex, oindex) in enumerate(indexes, start = lower):
+            current = cindex == self._index
+            option = self._fetch(oindex, current)
+            options.append(option)
 
-    def get(self):
+        result = os.linesep.join(options)
 
-        result = ''.join(self._buffer)
+        self._io.send(result)
 
-        return result
+    @property
+    def _shown(self):
 
-    def view(self, value):
+        return len(self._chunk(self._lower))
 
-        result = (value,)
+    def _focus(self):
 
-        return result
+        # if 1 shown and among 0, then move 0
+        ysize = self._shown - self._among - 1
 
+        self._cursor.last(ysize)
 
-class MultiLineEditor(bases.MultiLineEditor, Machine):
+        xsize = 0 # doesn't matter
 
-    __slots__ = ()
+        if not self._among:
+            xsize += self._origin
 
-    def get(self):
+        self._cursor.right(xsize)
 
-        subget = lambda sub: LineEditor.get(sub)
-        result = os.linesep.join(map(subget, self._subs))
+    def _slide(self, up, size):
 
-        return result
+        limit = len(self._visible)
 
-    def view(self, value):
+        size = size % limit
 
-        result = (value,)
+        index = self._index + (- size if up else size)
 
-        return result
+        if index < 0:
+            index = limit - 1
+        else:
+            extra = index - limit
+            if not extra < 0:
+                index = extra
 
+        size = index - self._index
 
-class Select(bases.Select, Machine):
+        up = size < 0
+        size = abs(size)
 
-    __slots__ = ()
+        return (up, size, index)
 
-    def get(self):
+    def _move_y(self, up, size):
 
-        result = self._visible[self._index]
+        (up, size, index) = self._slide(up, size)
 
-        return result
+        if up:
+            limit = self._index
+        else:
+            # if 1 sub and index 0, then limit is 0
+            limit = len(self._visible) - self._index - 1
 
-    def view(self, index):
+        # no need to check excess, ``_slide`` ensures
 
-        option = self._options[index]
-        result = (option,)
+        self._show(self._visible[self._index], False)
 
-        return result
+        if up:
+            limit = self._among
+            self._cursor.last(min(limit, size))
+        else:
+            limit = self._shown - self._among - 1
+            self._cursor.next(min(limit, size))
 
+        self._index = index
 
-class MultiSelect(bases.MultiSelect, Machine):
+        change = self._calibrate()
 
-    __slots__ = ()
+        if change:
+            self._redraw()
+        else:
+            self._show(self._visible[index], True)
 
-    def get(self):
+    def move(self, up, size):
 
-        result = self._chosen
+        self._move_y(up, size)
 
-        return result
+    def _specify(self, new):
 
-    def view(self, indexes):
+        argument = ''.join(self._buffer)
 
-        indexes = sorted(indexes)
-        options = (self._options[index] for index in indexes)
-        result = tuple(options)
+        if new:
+            indexes = self._visible
+            options = (self._options[index] for index in indexes)
+            pairs = zip(indexes, options)
+            pairs = self._filter(pairs, argument)
+            (indexes, options) = zip(*pairs)
+        else:
+            indexes = range(len(self._options))
 
-        return result
+        self._clear()
+
+        self._visible = indexes
+
+        self._index = 0
+
+        self._calibrate()
+
+        self._redraw(skip = True)
+
+        self._dispatch('filter', argument)
+
+    def _insert(self, runes):
+
+        save = self._buffer.copy()
+
+        value = ''.join(runes)
+        value = _clean(value)
+
+        self._buffer.extend(value)
+
+        try:
+            self._specify(True)
+        except ValueError:
+            self._buffer.clear()
+            self._buffer.extend(save)
+            raise Abort()
+
+    def _delete(self, left, size):
+
+        if not self._buffer:
+            raise Abort()
+
+        self._buffer.clear()
+
+        self._specify(False)
+
+    def _enter(self):
+
+        self._submit()
+
+
+class MultiSelect(Select):
+
+    __slots__ = ('_unpin', '_pin', '_chosen')
+
+    def __init__(self, unpin, pin, indexes, *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+
+        self._unpin = unpin
+        self._pin = pin
+
+        self._chosen = set(indexes)
+
+    @property
+    def indexes(self):
+
+        return self._chosen
+
+    def _tran(self, index, current, option):
+
+        signal = self._pin if index in self._chosen else self._unpin
+
+        return signal + super()._tran(index, current, option)
+
+    def _add(self, index, full):
+
+        if full:
+            limit = len(self._options)
+            if len(self._chosen) == limit:
+                raise Abort()
+            self._chosen.update(range(limit))
+        else:
+            self._chosen.add(index)
+
+    def _pop(self, index, full):
+
+        if full:
+            if not self._chosen:
+                raise Abort()
+            self._chosen.clear()
+        else:
+            self._chosen.remove(index)
+
+    def _inform(self, new):
+
+        index = self._visible[self._index]
+
+        exists = index in self._chosen
+        full = exists if new else not exists
+
+        (self._add if new else self._pop)(index, full)
+
+        self._redraw()
+
+        self._dispatch('inform', new, full)
+
+    def _move_x(self, left, size):
+
+        new = not left
+
+        self._inform(new)

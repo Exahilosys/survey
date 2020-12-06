@@ -1,7 +1,12 @@
 Quickstart
 ==========
 
-:func:`~survey.input` does exactly what you'd expect.
+Examples to get you started right away!
+
+Simple
+------
+
+- :func:`~survey.input` does exactly what you'd expect.
 
 .. code-block:: py
 
@@ -10,7 +15,7 @@ Quickstart
 
 .. image:: /_static/images/edit0.gif
 
-Supporting line breaks can be done by passing ``multi = True``.
+- Supporting line breaks can be done by passing ``multi = True``.
 
 .. code-block:: py
 
@@ -19,7 +24,7 @@ Supporting line breaks can be done by passing ``multi = True``.
 
 .. image:: /_static/images/edit1.gif
 
-:func:`~survey.password` should be used for obscuring input.
+- :func:`~survey.password` should be used for obscuring input.
 
 .. code-block:: py
 
@@ -28,7 +33,7 @@ Supporting line breaks can be done by passing ``multi = True``.
 
 .. image:: /_static/images/edit2.gif
 
-:func:`~survey.confirm` helps with ``Y/N``\-type prompts returning :class:`bool`.
+- :func:`~survey.confirm` helps with ``Y/N``\-type prompts returning :class:`bool`.
 
 .. code-block:: py
 
@@ -37,8 +42,7 @@ Supporting line breaks can be done by passing ``multi = True``.
 
 .. image:: /_static/images/edit3.gif
 
-:func:`~survey.question` can be paired with :func:`~survey.accept` or
-:func:`~survey.reject` to convey affirmation.
+- :func:`~survey.question` can be paired with :func:`~survey.accept` or :func:`~survey.reject` to convey affirmation.
 
 .. code-block:: py
 
@@ -51,7 +55,7 @@ Supporting line breaks can be done by passing ``multi = True``.
 
 .. image:: /_static/images/edit4.gif
 
-:func:`~survey.select` allows choice between options. Typing filters unsuitable options.
+- :func:`~survey.select` allows choice between options. Typing filters unsuitable options.
 
 .. code-block:: py
 
@@ -61,7 +65,7 @@ Supporting line breaks can be done by passing ``multi = True``.
 
 .. image:: /_static/images/select0.gif
 
-Multiple option selection can be done by passing ``multi = True``.
+- Multiple option selection can be done by passing ``multi = True``.
 
 .. code-block:: py
 
@@ -71,7 +75,84 @@ Multiple option selection can be done by passing ``multi = True``.
 
 .. image:: /_static/images/select1.gif
 
-There's also plenty of options for customisation (`colors <https://en.wikipedia.org/wiki/ANSI_escape_code#Colors>`_).
+- :func:`~survey.path` leverages :func:`~survey.traverse` to walk across file systems.
+
+.. code-block:: py
+
+    path = survey.path('./Sys', 'File: ')
+    print(f'Answered {path}.')
+
+.. image:: /_static/images/path0.gif
+
+Advanced
+--------
+
+- Edit a file by setting the initial ``value`` to something.
+
+.. code-block:: py
+
+    with open('./main.py') as file:
+        text = file.read()
+
+    result = survey.input('Edit: ', multi = True, value = text)
+
+    with open('./main.py', 'w') file:
+        file.write(result)
+
+    print(f'Wrote {len(result)} characters.')
+
+.. image:: /_static/images/edit5.gif
+
+- Use ``callback`` with :class:`wrapio.Track` to listen to events and update info.
+
+.. code-block:: py
+
+    import wrapio
+
+    track = wrapio.Track()
+
+    limit = 50
+
+    @track.call('insert')
+    @track.call('delete')
+    def handle(result, *args):
+        remain = max(0, limit - len(result))
+        info = str(remain)
+        if remain < limit // 3:
+            info = '\x1b[31m' + info + '\x1b[0m' # paint red
+        survey.update(info)
+
+    info = str(limit)
+    hint = ' chars left'
+    message = survey.input('Enter a commit message: ', info = info, hint = hint, multi = True, limit = limit, callback = track.invoke)
+    print(f'Answered with {len(message)} characters.')
+
+Flickering is caused by the cursor attempting to re-draw the info. Should not occur often.
+
+.. image:: /_static/images/edit6.gif
+
+- Use ``jump`` to auto-focus and enable ``TAB`` skipping.
+
+.. code-block:: py
+
+    stages = ('./Sys', './Sys/Absolute', './Sys/Absolute/Logarithms', './Sys/Absolute/Logarithms/Semaphoric')
+
+    def jump(path, names):
+        path = path.rstrip('/')
+        try:
+            index = stages.index(path)
+            stage = stages[index + 1]
+        except (ValueError, IndexError):
+            return (None, None)
+        name = os.path.basename(stage)
+        index = names.index(name)
+        return (index, name)
+
+    path = survey.path(stages[0], allow = allow)
+
+.. image:: /_static/images/path1.gif
+
+- Customize general behavior (`colors <https://en.wikipedia.org/wiki/ANSI_escape_code#Colors>`_).
 
 .. code-block:: py
 

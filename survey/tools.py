@@ -2,12 +2,17 @@ import enum
 import types
 import wrapio
 import os
+import string
+import itertools
 
 from . import helpers
 
 
 __all__ = ('Source', 'Translator', 'LineEditor', 'MultiLineEditor', 'Select',
            'MultiSelect')
+
+
+_blocks = string.whitespace + string.punctuation
 
 
 class Source(helpers.Handle):
@@ -376,6 +381,21 @@ class Tool(WindowView, helpers.Handle):
 
         self._e_move_x(left, 1)
 
+    def _jump_x(self, left):
+
+        pass
+
+    def _e_jump_x(self, left):
+
+        self._jump_x(left)
+
+        self._dispatch('jump_x', left)
+
+    @wrapio.event(Translator.Event.jump_x)
+    def _nnc(self, left):
+
+        self._e_jump_x(left)
+
     def _tab(self):
 
         pass
@@ -400,9 +420,13 @@ class Tool(WindowView, helpers.Handle):
 
         self._dispatch('insert', runes)
 
+        return runes
+
     def insert(self, runes):
 
-        self._e_insert(runes)
+        runes = self._e_insert(runes)
+
+        return runes
 
     @wrapio.event(Translator.Event.insert)
     def _nnc(self, rune):
@@ -465,7 +489,6 @@ class LineEditor(Tool):
     def __init__(self,
                  io,
                  cursor,
-                 value,
                  width,
                  limit,
                  funnel,
@@ -478,7 +501,7 @@ class LineEditor(Tool):
 
         self._funnel = funnel
 
-        self._buffer = list(value)
+        self._buffer = []
 
     @property
     def buffer(self):
@@ -574,6 +597,63 @@ class LineEditor(Tool):
 
         self._move_x(left, size)
 
+    def _jump_x_left(self):
+
+        limit = 0
+
+        stop = self._index - 1
+
+        if stop < limit:
+            raise Abort()
+
+        indexes = []
+        for block in _blocks:
+            try:
+                index = helpers.rindex(self._buffer, block, 0, stop)
+            except ValueError:
+                continue
+            indexes.append(index + 1)
+        else:
+            indexes.append(limit)
+
+        size = min(self._index - index for index in indexes)
+
+        self._move_x(True, size)
+
+    def _jump_x_right(self):
+
+        limit = len(self._buffer)
+
+        start = self._index + 1
+
+        if start > limit:
+            raise Abort()
+
+        indexes = []
+        for block in _blocks:
+            try:
+                index = self._buffer.index(block, start)
+            except ValueError:
+                continue
+            indexes.append(index)
+        else:
+            indexes.append(limit)
+
+        size = min(index - self._index for index in indexes)
+
+        self._move_x(False, size)
+
+    def _jump_x(self, left):
+
+        if left:
+            self._jump_x_left()
+        else:
+            self._jump_x_right()
+
+    def jump(self, left):
+
+        self._jump_x(left)
+
     def _ensure(self, runes):
 
         value = ''.join(runes)
@@ -668,7 +748,6 @@ class MultiLineEditor(Tool, Originful):
     def __init__(self,
                  io,
                  cursor,
-                 value,
                  finchk,
                  height,
                  width,
@@ -682,11 +761,11 @@ class MultiLineEditor(Tool, Originful):
 
         self._finchk = finchk
 
-        make = lambda value: LineEditor(io, cursor, value, width, None, funnel)
+        make = lambda: LineEditor(io, cursor, width, None, funnel)
 
-        self._subs = list(map(make, value.split(os.linesep)))
+        self._subs = [make()]
 
-        self._make = lambda: make('')
+        self._make = make
 
         self._limit = limit
 
@@ -870,6 +949,13 @@ class MultiLineEditor(Tool, Originful):
 
         self._move_x(left, size)
 
+    def _jump_x(self, left):
+
+        try:
+            self._sub.jump(left)
+        except Abort:
+            self._move_x(left, 1)
+
     def _ensure(self, runes):
 
         esize = len(runes)
@@ -886,11 +972,24 @@ class MultiLineEditor(Tool, Originful):
 
     def _insert(self, runes):
 
+        values = helpers.split(runes, os.linesep)
+        values = tuple(values)
+
+        runes = tuple(itertools.chain.from_iterable(values))
+
         self._ensure(runes)
 
-        runes = self._sub.insert(runes)
+        last = len(values) - 1
+        buffer = []
+        for (index, runes) in enumerate(values):
+            runes = self._sub.insert(runes)
+            buffer.extend(runes)
+            if index == last:
+                break
+            self._newsub()
+            buffer.append(os.linesep)
 
-        return runes
+        return buffer
 
     def _delete(self, left, size):
 

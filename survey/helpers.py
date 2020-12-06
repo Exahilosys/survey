@@ -66,6 +66,39 @@ class Handle(wrapio.Handle):
         return fail
 
 
+def rindex(values, sub, start = 0, stop = None):
+
+    if stop is None:
+        stop = len(values)
+
+    pairs = tuple(enumerate(values))[start:stop]
+
+    for (index, value) in reversed(pairs):
+        if not value == sub:
+            continue
+        break
+    else:
+        raise ValueError(repr(sub) + ' not in iterable')
+
+    return index
+
+
+def split(values, sub, maxsplit = - 1):
+
+    buffer = []
+    for value in values:
+        if maxsplit == 0:
+            break
+        if value == sub:
+            yield buffer.copy()
+            buffer.clear()
+            maxsplit -= 1
+        else:
+            buffer.append(value)
+
+    yield buffer
+
+
 class seq:
 
     _pattern = re.compile('(\x1b[\\[0-?]*[@-~])')

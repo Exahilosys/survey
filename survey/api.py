@@ -158,13 +158,15 @@ def _automatic_wrap(faller,
 
     _display.create(*visuals, fall = fall)
 
-    machine = creator(*args, **kwargs)
+    (machine, prepare) = creator(*args, **kwargs)
 
     with _cursor.hidden:
         machine.draw()
         machine.focus()
 
     with context:
+        if prepare:
+            prepare()
         result = _execute(machine, check)
 
     return result
@@ -220,14 +222,13 @@ def _edit_size_single():
     return (my, mx)
 
 
-def _edit_machine_single(value, limit, funnel, callback):
+def _edit_machine_single(limit, funnel, callback):
 
     (my, mx) = _edit_size_single()
 
     editor = machines.LineEditor(
         _io,
         _cursor,
-        value,
         mx,
         limit,
         funnel,
@@ -259,7 +260,7 @@ def _edit_size_multi():
     return (my, mx)
 
 
-def _edit_machine_multi(value, trail, limit, funnel, indent, callback):
+def _edit_machine_multi(trail, limit, funnel, indent, callback):
 
     finchk = lambda: _edit_machine_multi_finchk(editor, trail)
 
@@ -268,7 +269,6 @@ def _edit_machine_multi(value, trail, limit, funnel, indent, callback):
     editor = machines.MultiLineEditor(
         _io,
         _cursor,
-        value,
         finchk,
         my,
         mx,
@@ -303,20 +303,16 @@ def edit(*,
     callback = _callback(callback)
 
     if multi:
-        machine = _edit_machine_multi(
-            value,
-            trail,
-            limit,
-            funnel,
-            indent,
-            callback
-        )
+        machine = _edit_machine_multi(trail, limit, funnel, indent, callback)
     else:
-        machine = _edit_machine_single(value, limit, funnel, callback)
+        machine = _edit_machine_single(limit, funnel, callback)
 
     _context.fall = int(multi)
 
-    return machine
+    def prepare():
+        machine.insert(value)
+
+    return (machine, prepare)
 
 
 def _select_size(limit, indent, prefix):
@@ -484,4 +480,6 @@ def select(options,
 
     _context.fall = 0
 
-    return machine
+    prepare = None
+
+    return (machine, None)

@@ -24,7 +24,6 @@ jobs:
         pip install setuptools wheel twine
     - name: Build and publish
       env:
-        GITHUB_VERSION: ${{ github.ref }}
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.PYPI }}
       run: |

@@ -4,9 +4,15 @@
 
 #### Changes
 
-- `select`\'s `index` now moves focus *by* instead of *to* whatever it's set.
-
 #### Removals
+
+#### Fixes
+
+## v3.1.1
+
+#### Changes
+
+- `select`\'s `index` now moves focus *by* instead of *to* whatever it's set.
 
 #### Fixes
 

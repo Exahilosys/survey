@@ -12,7 +12,7 @@
 
 #### Fixes
 
-Updated version to reflect breaking changes.
+- Updated version to reflect breaking changes.
 
 ## v3.0.1
 

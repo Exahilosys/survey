@@ -1066,9 +1066,8 @@ class Select(Tool, Originful):
     Use for cycling through and selecting options.
     """
 
-    __slots__ = ('_origin', '_index', '_options', '_visible', '_changed',
-                 '_buffer', '_width', '_prefix', '_indent', '_funnel',
-                 '_filter')
+    __slots__ = ('_origin', '_options', '_visible', '_changed', '_buffer',
+                 '_width', '_prefix', '_indent', '_funnel', '_filter')
 
     def __init__(self,
                  io,
@@ -1080,15 +1079,10 @@ class Select(Tool, Originful):
                  indent,
                  funnel,
                  filter,
-                 index,
                  *args,
                  **kwargs):
 
         Tool.__init__(self, io, cursor, height - 1, *args, **kwargs)
-
-        self._index = index
-
-        self._calibrate()
 
         self._options = options
         self._visible = tuple(range(len(options)))

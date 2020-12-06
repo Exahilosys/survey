@@ -4,9 +4,13 @@
 
 #### Changes
 
+- `select`\'s `index` now moves focus *by* instead of *to* whatever it's set.
+
 #### Removals
 
 #### Fixes
+
+- Passing `callback` no longer breaks everything.
 
 ## v3.1.0
 

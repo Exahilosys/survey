@@ -113,7 +113,7 @@ class Abort(Exception):
     __slots__ = ()
 
 
-def _execute(machine, check):
+def _execute(machine, prepare, check):
 
     _context.machine = machine
 
@@ -122,6 +122,8 @@ def _execute(machine, check):
     source = tools.Source(_io, callback = translator.invoke)
 
     _context.finish = source.done
+
+    prepare()
 
     while True:
         source.stream()
@@ -165,9 +167,7 @@ def _automatic_wrap(faller,
         machine.focus()
 
     with context:
-        if prepare:
-            prepare()
-        result = _execute(machine, check)
+        result = _execute(machine, prepare, check)
 
     return result
 
@@ -339,7 +339,6 @@ def _select_machine_single(limit,
                            indent,
                            funnel,
                            filter,
-                           index,
                            callback):
 
     (my, mx) = _select_size_single(limit, indent, prefix)
@@ -354,7 +353,6 @@ def _select_machine_single(limit,
         indent,
         funnel,
         filter,
-        index,
         callback = callback
     )
 
@@ -376,7 +374,6 @@ def _select_machine_multi(limit,
                           indent,
                           funnel,
                           filter,
-                          index,
                           unpin,
                           pin,
                           indexes,
@@ -397,7 +394,6 @@ def _select_machine_multi(limit,
         indent,
         funnel,
         filter,
-        index,
         callback = callback
     )
 
@@ -460,7 +456,6 @@ def select(options,
             indent,
             funnel,
             filter,
-            index,
             unpin,
             pin,
             indexes,
@@ -474,12 +469,12 @@ def select(options,
             indent,
             funnel,
             filter,
-            index,
             callback
         )
 
     _context.fall = 0
 
-    prepare = None
+    def prepare():
+        machine.move(False, index)
 
-    return (machine, None)
+    return (machine, prepare)

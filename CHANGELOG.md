@@ -2,13 +2,21 @@
 
 #### Additions
 
--  `alt+left` and `alt+right` move the cursor after the next special rune.
+#### Changes
+
+#### Removals
+
+#### Fixes
+
+## v3.1.0
+
+#### Additions
+
+- `alt+left` and `alt+right` move the cursor after the next special rune.
 
 #### Changes
 
 - Cursor moves at the end of editors' initial `value` by inserting.
-
-#### Removals
 
 #### Fixes
 

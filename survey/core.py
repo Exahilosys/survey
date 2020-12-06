@@ -784,7 +784,7 @@ def path(directory, *args, units = None, allow = None, **kwargs):
     Traverse a system directory until a file is selected.
 
     :param tuple[str,str,str] units:
-        ``f`` for non-dirs and ``/`` for empty dirs, ``d`` for dirs.
+        ``f`` for non-dirs, ``/`` for empty dirs and ``d`` otherwise.
     :param func able:
         Called with ``(path)`` and should return :class:`bool` for whether to
         include in options.

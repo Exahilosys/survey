@@ -732,9 +732,9 @@ def traverse(initial, *args, **kwargs):
     :param func show:
         Called with ``(trail)``; returns ``(path)`` for info formatting.
     :param func jump:
-        Called with ``(trail)``; returns ``(index, display)`` with former
-        used as forceful select upon **⇥** and latter for info formatting. Both
-        values can be ``None`` to disable.
+        Called with ``(trail, options)``; returns ``(index, display)`` with
+        former used as forceful select upon **⇥** and latter for info
+        formatting. Both values can be ``None`` to disable.
 
     Arguments except ``multi`` are passed to :func:`.traverse`.
 
@@ -897,7 +897,6 @@ def path(directory, *args, units = None, allow = None, **kwargs):
     )
 
     result = make(trail)
-
 
     if auto:
         respond(result)

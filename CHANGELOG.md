@@ -8,6 +8,8 @@
 
 #### Fixes
 
+- Fixed `traverse`\'s `jump` doc.
+
 ## v3.0.2
 
 - Tab now triggers an insert event.

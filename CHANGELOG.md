@@ -10,6 +10,12 @@
 
 ## v3.0.2
 
+- Tab now triggers an insert event.
+
+#### Fixes
+
+## v3.0.2
+
 #### Fixes
 
 - Updated version to reflect breaking changes.

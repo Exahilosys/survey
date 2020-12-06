@@ -882,7 +882,7 @@ class MultiLineEditor(Tool, Originful):
 
     def _tab(self):
 
-        self._insert((' ',) * self._indent)
+        self._e_insert((' ',) * self._indent)
 
     def _insert(self, runes):
 

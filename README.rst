@@ -20,7 +20,7 @@ Installing
 Links
 -----
 
-- Check out the `documentation <https://survey.readthedocs.io>`_ for more details.
+- Check out the `quickstart <https://survey.readthedocs.io/quickstart.html>`_ guide for more.
 - Greatly inspired by `AlecAivazis's GoLang <https://github.com/AlecAivazis/survey>`_ library.
 
 Suggestions and contributions are greatly appreciated!

@@ -8,13 +8,19 @@
 
 #### Fixes
 
-## v2.2.1
+## v3.0.2
 
 #### Fixes
 
-- `jump` now takes proper arguments in `path`. 
+Updated version to reflect breaking changes.
 
-## v2.2.0
+## v3.0.1
+
+#### Fixes
+
+- `jump` now takes proper arguments in `path`.
+
+## v3.0.0
 
 #### Additions
 

@@ -96,7 +96,7 @@ Advanced
 
     result = survey.input('Edit: ', multi = True, value = text)
 
-    with open('./main.py', 'w') file:
+    with open('./main.py', 'w') as file:
         file.write(result)
 
     print(f'Wrote {len(result)} characters.')

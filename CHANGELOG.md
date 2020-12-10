@@ -8,6 +8,10 @@
 
 #### Fixes
 
+## v3.2.3
+
+#### Fixes
+
 - `traverse` accepts `trail` rather than its first element (just as docs imply).
 - Allow moving back with non-empty `traverse` trail.
 

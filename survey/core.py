@@ -69,6 +69,9 @@ def respond(*shows, color = None, erase = False, delimit = ', ', skip = False):
         Whether to ignore internal results.
     """
 
+    if skip:
+        api.view()
+
     if color is None:
         color = _context.theme.palette.info
 
@@ -80,10 +83,10 @@ def respond(*shows, color = None, erase = False, delimit = ', ', skip = False):
         shows = map(paint, shows)
         return shows
 
-    if not (shows or skip):
-        shows = None
+    if shows:
+        api.view(*shows)
 
-    api.respond(shows, format, erase, delimit)
+    api.respond(format, erase, delimit)
 
 
 def finish():
@@ -212,10 +215,23 @@ def _visualizer(prompt_index):
     return decorator
 
 
+def _input_hint(default, template = '[{0}] '):
+
+    if default is None:
+        return
+
+    result = template.format(default)
+
+    return result
+
+
 @_visualizer(0)
-def _input(*args, **kwargs):
+def _input(*args, default = None, **kwargs):
 
     result = api.edit(*args, **kwargs)
+
+    if not result and default:
+        api.view(default)
 
     return result
 
@@ -229,6 +245,8 @@ def input(*args, **kwargs):
 
     :param str prompt:
         Shown before input, static.
+    :param bool default:
+        Match empty responses to this.
     :param str info:
         Shown after prompt, use :func:`update` to change.
     :param str hint:
@@ -253,6 +271,12 @@ def input(*args, **kwargs):
         Whether to immediately :func:`respond` after submission.
     """
 
+    default = kwargs.get('default')
+
+    if not ('hint' in kwargs or default is None):
+        hint = _input_hint(default)
+        kwargs['hint'] = hint
+
     result = _input(*args, **kwargs)
 
     return result
@@ -270,10 +294,11 @@ def password(*args, rune = '*', color = None, **kwargs):
     :param str color:
         Used for painting response.
 
-    Arguments except ``auto`` and ``funnel`` are passed to :func:`.input`.
+    Arguments except ``default``, ``auto`` and ``funnel`` are passed to
+    :func:`.input`.
     """
 
-    helpers.exclude_args(kwargs, 'auto', 'funnel')
+    helpers.exclude_args(kwargs, 'default', 'auto', 'funnel')
 
     def funnel(value):
         result = rune
@@ -316,10 +341,10 @@ def question(*args, **kwargs):
     """
     Await and return input. Use :func:`.accept` to respond.
 
-    Arguments except ``auto`` are passed to :func:`.input`.
+    Arguments except ``default`` and ``auto`` are passed to :func:`.input`.
     """
 
-    helpers.exclude_args(kwargs, 'auto')
+    helpers.exclude_args(kwargs, 'default', 'auto')
 
     return input(*args, auto = False, **kwargs)
 

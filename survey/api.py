@@ -38,12 +38,18 @@ _context = types.SimpleNamespace(
 )
 
 
-def _respond(shows, format, full, delimit):
+def view(*shows):
+
+    _context.shows.clear()
+
+    _context.shows.extend(shows)
+
+
+def _respond(format, full, delimit):
 
     _context.machine.clear()
 
-    if shows is None:
-        shows = _context.shows
+    shows = _context.shows
 
     if not format is None:
         shows = format(shows)
@@ -61,10 +67,10 @@ def _respond(shows, format, full, delimit):
     _context.shows.clear()
 
 
-def respond(shows, format, full, delimit):
+def respond(format, full, delimit):
 
     with _cursor.hidden:
-        _respond(shows, format, full, delimit)
+        _respond(format, full, delimit)
 
 
 def _finish(gentle):

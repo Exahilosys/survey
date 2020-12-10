@@ -2,6 +2,8 @@
 
 #### Additions
 
+- Added `default` for `input` and its children.
+
 #### Changes
 
 #### Removals

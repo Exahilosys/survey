@@ -714,11 +714,6 @@ class LineEditor(Tool):
 
         self._focus()
 
-    @wrapio.event(Translator.Event.delete)
-    def _nnc(self, left):
-
-        self._delete(left, 1)
-
     def _enter(self):
 
         self._submit()

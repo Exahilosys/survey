@@ -232,6 +232,7 @@ def _input(*args, default = None, **kwargs):
 
     if not result and default:
         api.view(default)
+        result = default
 
     return result
 

@@ -8,6 +8,10 @@
 
 #### Fixes
 
+## v3.2.1
+
+#### Fixes
+
 - Actually return default on empty responses.
 
 ## v3.2.0

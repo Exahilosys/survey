@@ -2,13 +2,17 @@
 
 #### Additions
 
-- Added `default` for `input` and its children.
-
 #### Changes
 
 #### Removals
 
 #### Fixes
+
+## v3.2.0
+
+#### Additions
+
+- Added `default` for `input` and its children.
 
 ## v3.1.1
 

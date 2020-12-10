@@ -8,7 +8,11 @@
 
 #### Fixes
 
-- Deletions now work for `input` with `multi=False`. 
+## v3.2.4
+
+#### Fixes
+
+- Deletions now work for `input` with `multi=False`.
 
 ## v3.2.3
 

@@ -518,7 +518,7 @@ def select(*args, **kwargs):
     """
     select(options, prompt=None, *, info=None, hint=None, color=None, multi=False, check=None, prefix='> ', indent=None, funnel=None, filter=None, limit=6, unpin='[ ] ', pin='[X] ', indexes=[], callback=None, auto=True)
 
-    Draw a menu of options. Traverse using **↑** and **↓** keys. Type to filter.
+    Draw a menu of options. Move using **↑** and **↓** keys. Type to filter.
     Enter to submit. Await and return index(es) of option(s).
 
     :param list[str] options:
@@ -639,10 +639,15 @@ def _traverse(trail, able, next, *args, show = None, jump = None, **kwargs):
 
     track = wrapio.Track()
 
-    wall = not len(trail) > 1
-    back = None
+    back_trail = trail.copy()
+    try:
+        back_option = back_trail.pop()
+    except IndexError:
+        able_back = False
+    else:
+        able_back = able(back_trail, back_option)
 
-    able_back = not wall
+    back = None
 
     def _move_x(left, index):
         nonlocal back
@@ -748,14 +753,14 @@ def _traverse(trail, able, next, *args, show = None, jump = None, **kwargs):
     return result
 
 
-def traverse(initial, *args, **kwargs):
+def traverse(trail, *args, **kwargs):
 
     """
-    traverse(initial, able, next, *args, show=None, jump=None, **kwargs)
+    traverse(trail, able, next, *args, show=None, jump=None, **kwargs)
 
     Cycle through proceedural pages of options.
 
-    :param object initial:
+    :param list trail:
         Used on ``next`` to determine options.
     :param func able:
         Called with ``(trail, option)``; returns :class:`bool` for whether
@@ -780,7 +785,7 @@ def traverse(initial, *args, **kwargs):
 
     helpers.exclude_args(kwargs, 'multi')
 
-    trail = [initial]
+    trail = trail.copy()
 
     try:
         auto = kwargs.pop('auto')
@@ -858,6 +863,8 @@ def path(directory, *args, units = None, allow = None, **kwargs):
         return (names, paths)
 
     def able(trail, part):
+        if not trail:
+            return False
         path = make(trail, part)
         return os.path.isdir(path) and all(contents(path))
 
@@ -920,8 +927,10 @@ def path(directory, *args, units = None, allow = None, **kwargs):
     except KeyError:
         auto = helpers.call_default(_visualizer_wrap, 'auto', kwargs)
 
+    trail = [directory]
+
     trail = traverse(
-        directory,
+        trail,
         able,
         next,
         *args,

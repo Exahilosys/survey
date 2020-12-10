@@ -4,11 +4,15 @@
 
 #### Changes
 
-- `check` now accounts for `default`.
-
 #### Removals
 
 #### Fixes
+
+## v3.2.2
+
+#### Changes
+
+- `check` now accounts for `default`.
 
 ## v3.2.1
 

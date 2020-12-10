@@ -4,6 +4,8 @@
 
 #### Changes
 
+- `check` now accounts for `default`.
+
 #### Removals
 
 #### Fixes

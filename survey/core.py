@@ -228,6 +228,14 @@ def _input_hint(default, template = '[{0}] '):
 @_visualizer(0)
 def _input(*args, default = None, **kwargs):
 
+    if not default is None:
+        subcheck = kwargs.get('check')
+        def check(result):
+            if not result:
+                result = default
+            return not subcheck or subcheck(result)
+        kwargs['check'] = check
+
     result = api.edit(*args, **kwargs)
 
     if not result and default:

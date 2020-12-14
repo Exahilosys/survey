@@ -4,6 +4,8 @@
 
 #### Changes
 
+- Moved `confirm` hint default closer to input.
+
 #### Removals
 
 #### Fixes

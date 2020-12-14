@@ -384,7 +384,7 @@ def _confirm_hint(default, sentiments, template = '({0}/{1}) '):
             option = helpers.paint(option, _context.theme.palette.info)
         options[index] = option
 
-    if default is True:
+    if default is False:
         options = reversed(options)
 
     result = template.format(*options)

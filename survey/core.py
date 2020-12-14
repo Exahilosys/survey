@@ -5,14 +5,16 @@ import functools
 import wrapio
 import itertools
 import os
+import math
+import operator
 
 from . import api
 from . import theme
 from . import helpers
 
 
-__all__ = ('use', 'respond', 'finish', 'update', 'input', 'password', 'accept',
-           'question', 'confirm', 'select', 'traverse', 'path')
+__all__ = ('use', 'respond', 'finish', 'update', 'input', 'numeric', 'password',
+           'accept', 'question', 'confirm', 'select', 'traverse', 'path')
 
 
 _theme = theme.Theme()
@@ -291,6 +293,168 @@ def input(*args, **kwargs):
     return result
 
 
+def _numeric_hint_type(strict, types = ('dec', 'int'), template = '({0}) '):
+
+    type = types[strict]
+
+    result = template.format(type)
+
+    return result
+
+
+def _numeric_hint_range(min,
+                        max,
+                        lower,
+                        upper,
+                        lt_op = '<{0}',
+                        le_op = '≤{0}',
+                        gt_op = '{0}<',
+                        ge_op = '{0}≤',
+                        delimit = 'x',
+                        template = '[{0}] '):
+
+    instructs = []
+
+    if not min == - math.inf:
+        op = ge_op if lower else gt_op
+        lower_instruct = op.format(min)
+    else:
+        lower_instruct = ''
+
+    instructs.append(lower_instruct)
+
+    if not max == math.inf:
+        op = le_op if upper else lt_op
+        upper_instruct = op.format(max)
+    else:
+        upper_instruct = ''
+
+    instructs.append(upper_instruct)
+
+    if not any(instructs):
+        return
+
+    manual = delimit.join(instructs)
+    result = template.format(manual)
+
+    return result
+
+
+def _numeric_hint(strict,
+                  min,
+                  max, 
+                  lower, 
+                  upper,
+                  delimit = '',
+                  template = '{0}'):
+
+    subresults = []
+
+    if strict:
+        subresult = _numeric_hint_type(strict)
+        subresults.append(subresult)
+
+    subresult = _numeric_hint_range(min, max, lower, upper)
+    subresults.append(subresult)
+
+    manual = delimit.join(subresults)
+
+    result = template.format(manual)
+
+    return result
+
+
+def numeric(*args,
+            min = None,
+            max = None,
+            lower = True,
+            upper = True,
+            strict = False,
+            **kwargs):
+
+    """
+    numeric(*args, min=None, max=None, lower=True, upper=True, strict=False, **kwargs)
+
+    Only accept and return numeric values.
+
+    :param float min:
+        Minimum allowed value.
+    :param float max:
+        Maximum allowed value.
+    :param bool lower:
+        Whether to include ``min``.
+    :param bool upper:
+        Whether to include ``max``.
+    :param bool strict:
+        Whether to disallow floats.
+
+    When ``hint`` is ommited, a suitable one takes its place.
+
+    Other arguments are passed to :func:`.input`.
+    """
+
+    memory = None
+
+    if strict:
+        def concheck(value):
+            nonlocal memory
+            try:
+                memory = float(value)
+            except ValueError:
+                return False
+            result = math.isfinite(memory)
+            return result
+    else:
+        def concheck(value):
+            nonlocal memory
+            try:
+                memory = int(value)
+            except ValueError:
+                return False
+            result = True
+            return result
+
+    if min is None:
+        min = - math.inf
+
+    upper_op = operator.le if upper else operator.lt
+
+    if max is None:
+        max = math.inf
+
+    lower_op = operator.ge if lower else operator.gt
+
+    def rancheck(value):
+        if not concheck(value):
+            return False
+        result = lower_op(memory, min) and upper_op(memory, max)
+        return result
+
+    check = rancheck
+
+    subcheck = kwargs.get('check')
+
+    if subcheck:
+        precheck = check
+        def check(value):
+            if not precheck(value):
+                return False
+            result = subcheck(memory)
+            return result
+
+    kwargs['check'] = check
+
+    if not 'hint' in kwargs:
+        hint = _numeric_hint(strict, min, max, lower, upper)
+        kwargs['hint'] = hint
+
+    input(*args, **kwargs)
+
+    result = memory
+
+    return result
+
+
 def password(*args, rune = '*', color = None, **kwargs):
 
     """
@@ -558,11 +722,11 @@ def select(*args, **kwargs):
     :param list[int] indexes:
         Indexes of options to pre-select upon initial draw (**multi**).
     :param func callback:
-        Used with ``(name, *args)`` for listening to keypress events.
+        Called with ``(name, result, *args)`` on keypress events.
     :param bool auto:
         Whether to immediately :func:`respond` after submission.
 
-    Event names are followed by current result, and then arguments.
+    When ``hint`` is ommited, a suitable one takes its place.
     """
 
     color = kwargs.pop('color', _context.theme.palette.info)
@@ -775,6 +939,8 @@ def traverse(trail, *args, **kwargs):
         former used as forceful select upon **⇥** and latter for info
         formatting. Both values can be ``None`` to disable.
 
+    When ``hint`` is ommited, a suitable one takes its place.
+
     Arguments except ``multi`` are passed to :func:`.traverse`.
 
     .. note::
@@ -827,6 +993,8 @@ def path(directory, *args, units = None, allow = None, **kwargs):
     :param func able:
         Called with ``(path)`` and should return :class:`bool` for whether to
         include in options.
+
+    When ``hint`` is ommited, a suitable one takes its place.
 
     Other arguments are passed to :func:`.traverse`.
 
@@ -887,33 +1055,24 @@ def path(directory, *args, units = None, allow = None, **kwargs):
             shows.append(show)
         return (names, shows)
 
-    try:
-        subjump = kwargs['jump']
-    except KeyError:
-        pass
-    else:
+    subjump = kwargs.get('jump')
+    if subjump:
         def jump(trail, parts):
             path = make(trail)
             result = subjump(path, parts)
             return result
         kwargs['jump'] = jump
 
-    try:
-        subindexer = kwargs['index']
-    except KeyError:
-        pass
-    else:
+    subindexer = kwargs.get('index')
+    if subindexer:
         def indexer(trail, parts):
             path = make(trail)
             result = subindexer(path, parts)
             return result
         kwargs['index'] = indexer
 
-    try:
-        subcheck = kwargs['check']
-    except KeyError:
-        pass
-    else:
+    subcheck = kwargs.get('check')
+    if subcheck:
         def check(trail, part):
             path = make(trail, part)
             result = subcheck(path)

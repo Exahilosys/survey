@@ -2,13 +2,21 @@
 
 #### Additions
 
+#### Changes
+
+#### Removals
+
+#### Fixes
+
+## v3.3.0
+
+#### Additions
+
 - Added `numeric`.
 
 #### Changes
 
 - Moved `confirm` hint default closer to input.
-
-#### Removals
 
 #### Fixes
 

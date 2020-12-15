@@ -8,8 +8,7 @@ __all__ = ('IO',)
 
 class IO:
 
-    __slots__ = ('_i', '_o', '_buffer', '_fd', '_save', '_mode', '_block',
-                 '_atomic')
+    __slots__ = ('_i', '_o', '_buffer', '_fd', '_save', '_mode', '_atomic')
 
     def __init__(self, i, o):
 
@@ -23,8 +22,6 @@ class IO:
         self._save = None
         self._mode = None
 
-        self._block = None
-
         self._atomic = helpers.Atomic(self.start, self.stop)
 
     @property
@@ -35,14 +32,6 @@ class IO:
     def _swap(self, mode):
 
         termios.tcsetattr(self._fd, termios.TCSAFLUSH, mode)
-
-    def _fix(self, block):
-
-        self._block = block
-
-        self._mode[6][termios.VMIN] = int(block)
-
-        self._swap(self._mode)
 
     def start(self):
 
@@ -56,10 +45,11 @@ class IO:
 
         mode[3] &= ~(termios.ECHO | termios.ECHONL | termios.ICANON)
         mode[6][termios.VTIME] = 0
+        mode[6][termios.VMIN] = 1
+
+        self._swap(mode)
 
         self._mode = mode
-
-        self._fix(True)
 
     def stop(self):
 
@@ -80,21 +70,18 @@ class IO:
         self._o.write(value)
         self._o.flush()
 
-    def recv(self, block = True):
+    def recv(self):
 
         """
         Read from input buffer.
         """
 
-        if not block is self._block:
-            self._fix(block)
-
         try:
-            return self._buffer.pop(0)
+            rune = self._buffer.pop(0)
         except IndexError:
-            pass
+            rune = self._i.read(1)
 
-        return self._i.read(1)
+        return rune
 
     def feed(self, data):
 

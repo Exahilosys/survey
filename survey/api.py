@@ -22,6 +22,12 @@ __all__ = ()
 _io = io.IO(sys.stdin, sys.stdout)
 
 
+setup = _io.setup
+
+
+reset = _io.reset
+
+
 _cursor = cursor.Cursor(_io)
 
 

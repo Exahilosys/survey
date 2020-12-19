@@ -17,6 +17,14 @@ __all__ = ('use', 'respond', 'finish', 'update', 'input', 'numeric', 'password',
            'accept', 'question', 'confirm', 'select', 'traverse', 'path')
 
 
+api.setup()
+
+
+def reset():
+
+    api.reset()
+
+
 _theme = theme.Theme()
 
 
@@ -342,8 +350,8 @@ def _numeric_hint_range(min,
 
 def _numeric_hint(strict,
                   min,
-                  max, 
-                  lower, 
+                  max,
+                  lower,
                   upper,
                   delimit = '',
                   template = '{0}'):

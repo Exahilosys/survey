@@ -2,6 +2,8 @@
 
 #### Additions
 
+- Windows 10 support (Anniversary Update and up).
+
 #### Changes
 
 #### Removals

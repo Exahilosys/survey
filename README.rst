@@ -9,6 +9,7 @@ Features
 - **Lightweight**: Independent of any other prompt or visual libraries.
 - **Adaptable**: Works with any string formatting and window size.
 - **Extensive**: Packed with tweaks and features for any situation.
+- **Complete**: Supports Windows 10 (Anniversary Update and up).
 
 Installing
 ----------

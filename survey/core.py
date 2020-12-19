@@ -342,8 +342,8 @@ def _numeric_hint_range(min,
 
 def _numeric_hint(strict,
                   min,
-                  max, 
-                  lower, 
+                  max,
+                  lower,
                   upper,
                   delimit = '',
                   template = '{0}'):
@@ -391,6 +391,10 @@ def numeric(*args,
     When ``hint`` is ommited, a suitable one takes its place.
 
     Other arguments are passed to :func:`.input`.
+
+    .. note::
+
+        - ``check`` is called after ``min/max`` succeeds and takes :class:`int` or :class:`float`.
     """
 
     memory = None

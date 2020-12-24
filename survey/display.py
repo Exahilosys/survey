@@ -89,7 +89,7 @@ class Graphic:
     def _clean(value):
 
         value = helpers.seq.clean(value)
-        runes = helpers.clean(value, keep = {os.linesep})
+        runes = helpers.clean(value, ignore = {os.linesep})
         value = ''.join(runes)
 
         return value

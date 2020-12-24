@@ -10,6 +10,8 @@
 
 #### Fixes
 
+- Fixed ignored sequence detection.
+
 ## v3.3.0
 
 #### Additions

@@ -5,7 +5,7 @@ with open('README.rst') as file:
 
 name = 'survey'
 
-version = '3.3.0'
+version = '3.4.0'
 
 author = 'Exahilosys'
 

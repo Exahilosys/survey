@@ -2,11 +2,17 @@
 
 #### Additions
 
-- Windows 10 support (Anniversary Update and up).
-
 #### Changes
 
 #### Removals
+
+#### Fixes
+
+## v3.4.0
+
+#### Additions
+
+- Windows 10 support (Anniversary Update and up).
 
 #### Fixes
 

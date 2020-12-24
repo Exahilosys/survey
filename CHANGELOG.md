@@ -2,11 +2,15 @@
 
 #### Additions
 
+- Windows 10 support (Anniversary Update and up).
+
 #### Changes
 
 #### Removals
 
 #### Fixes
+
+- Fixed ignored sequence detection.
 
 ## v3.3.0
 

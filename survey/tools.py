@@ -60,7 +60,7 @@ class Source(helpers.Handle):
 
     def _escape(self):
 
-        key = self._io.recv(False)
+        key = self._io.recv()
 
         if key == '[':
             key = self._io.recv()

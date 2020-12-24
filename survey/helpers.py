@@ -225,12 +225,22 @@ def paint(value, sequence, null = '\x1b[0m'):
     return result
 
 
-def clean(value, keep = set()):
+def clean(value, ignore = set()):
+
+    exclude = set()
 
     for rune in value:
-        if not rune.isprintable() and not rune in keep:
+        if rune.isprintable():
             continue
-        yield rune
+        exclude.add(rune)
+
+    if exclude:
+        pattern = '[{0}]'.format('|'.join(exclude))
+        if ignore:
+            pattern = '(?!{1}){0}(?<!{1})'.format(pattern, '|'.join(ignore))
+        value = re.sub(pattern, '', value)
+
+    return value
 
 
 def succeed_functions(*functions):

@@ -17,6 +17,14 @@ __all__ = ('use', 'respond', 'finish', 'update', 'input', 'numeric', 'password',
            'accept', 'question', 'confirm', 'select', 'traverse', 'path')
 
 
+api.setup()
+
+
+def reset():
+
+    api.reset()
+
+
 _theme = theme.Theme()
 
 

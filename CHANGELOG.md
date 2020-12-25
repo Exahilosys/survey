@@ -8,6 +8,8 @@
 
 #### Fixes
 
+- Fixed clean bracket regex.
+
 ## v3.4.0
 
 #### Additions

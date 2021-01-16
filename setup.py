@@ -5,7 +5,7 @@ with open('README.rst') as file:
 
 name = 'survey'
 
-version = '3.4.1'
+version = '3.4.2'
 
 author = 'Exahilosys'
 
@@ -21,7 +21,7 @@ setuptools.setup(
     description = 'A simple library for creating beautiful interactive prompts.',
     long_description = readme,
     install_requires = [
-        'wrapio>=0.3.5'
+        'wrapio>=1.0.0'
     ],
     extras_require = {
         'docs': [

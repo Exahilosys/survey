@@ -8,6 +8,12 @@
 
 #### Fixes
 
+## v3.4.2
+
+#### Changes
+
+- Updated `wrapio` requirement.
+
 ## v3.4.1
 
 #### Fixes

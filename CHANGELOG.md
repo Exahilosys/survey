@@ -4,11 +4,15 @@
 
 #### Changes
 
-- Removed built-in `namedtuple` `defaults` parameter.
-
 #### Removals
 
 #### Fixes
+
+## v3.4.3
+
+#### Changes
+
+- Removed built-in `namedtuple` `defaults` parameter.
 
 ## v3.4.2
 

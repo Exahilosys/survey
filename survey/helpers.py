@@ -4,6 +4,8 @@ import wrapio
 import re
 import inspect
 import contextlib
+import collections
+import itertools
 
 
 __all__ = ()
@@ -388,3 +390,31 @@ def call_default(function, name, kwargs, default = inspect.Parameter.empty):
 def noop_contextmanager():
 
     yield
+
+
+def compat_namedtuple(*args, defaults = (), **kwargs):
+
+    base = collections.namedtuple(*args, **kwargs)
+
+    stores = (base._fields, defaults)
+    stores = map(reversed, stores)
+
+    pairs = itertools.zip_longest(*stores)
+    pairs = tuple(reversed(tuple(pairs)))
+    pairs = pairs[- len(defaults):]
+
+    class Nt(base):
+
+        __slots__ = ()
+
+        def __new__(cls, *args, **kwargs):
+
+            read = len(args) - len(base._fields)
+
+            if read:
+                for pair in pairs[read:]:
+                    kwargs.setdefault(*pair)
+
+            return super().__new__(cls, *args, **kwargs)
+
+    return Nt

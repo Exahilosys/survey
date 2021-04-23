@@ -4,6 +4,8 @@
 
 #### Changes
 
+- Removed built-in `namedtuple` `defaults` parameter.
+
 #### Removals
 
 #### Fixes

@@ -1,10 +1,11 @@
-import collections
+
+from . import helpers
 
 
 __all__ = ('Auto', 'Palette', 'Symbol', 'Theme')
 
 
-Auto = collections.namedtuple(
+Auto = helpers.compat_namedtuple(
     'Auto',
     'pre_prompt hint_paint info_paint',
     defaults = (
@@ -18,7 +19,7 @@ Auto = collections.namedtuple(
 Auto.__doc__ = ''
 
 
-Palette = collections.namedtuple(
+Palette = helpers.compat_namedtuple(
     'Palette',
     'note info done fail dark hint fade',
     defaults = (
@@ -35,7 +36,7 @@ Palette = collections.namedtuple(
 Palette.__doc__ = ''
 
 
-Symbol = collections.namedtuple(
+Symbol = helpers.compat_namedtuple(
     'Symbol',
     'note',
     defaults = (
@@ -46,7 +47,7 @@ Symbol = collections.namedtuple(
 Symbol.__doc__ = ''
 
 
-Theme = collections.namedtuple(
+Theme = helpers.compat_namedtuple(
     'Theme',
     'auto palette symbol',
     defaults = (

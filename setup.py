@@ -23,7 +23,7 @@ setuptools.setup(
             'sphinx',
             'sphinx-rtd-theme',
             'sphinx-paramlinks',
-            'sphinx_autodoc_typehints'
+            'sphinx-autodoc-typehints'
         ]
     }
 )

@@ -24,6 +24,6 @@ jobs:
         python setup.py sdist bdist_wheel
         twine upload dist/*
     - uses: marvinpinto/action-automatic-releases@latest
-        with: 
-          repo_token: '${{ secrets.GITHUB_TOKEN }}'
-          prerelease: false
+      with: 
+        repo_token: '${{ secrets.GITHUB_TOKEN }}'
+        prerelease: false

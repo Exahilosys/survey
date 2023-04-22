@@ -1,6 +1,6 @@
 ✨ A simple library for creating beautiful interactive prompts.
 
-.. image:: https://github.com/Exahilosys/survey/raw/master/docs/_static/images/showcase-1.gif
+.. image:: https://github.com/Exahilosys/survey/blob/main/docs/_static/images/showcase-1.gif?raw=true
 
 Features
 --------

@@ -16,7 +16,7 @@ Installing
 
 .. code-block::
 
-    pip3 install survey
+    pip install survey==4.0.0a0
 
 Links
 -----

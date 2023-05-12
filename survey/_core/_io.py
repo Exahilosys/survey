@@ -56,8 +56,7 @@ class IO(BaseIO):
 
         return text.encode(self._o_encoding)
 
-    def _send(self, 
-              text: str):
+    def _send(self, text):
 
         text_raw = self._encode(text)
 
@@ -67,7 +66,7 @@ class IO(BaseIO):
 
         return text.decode(self._i_encoding)
 
-    def _recv(self) -> str:
+    def _recv(self):
 
         text_raw = super()._recv()
 

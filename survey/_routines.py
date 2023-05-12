@@ -246,8 +246,6 @@ def _inquire(*args,
     default_value = _helpers.get_function_arg_safe(_widgets.Inquire, 'default', widget_kwargs)
     default_option = next((option for (option, value) in options.items() if value == default_value), default_value)
 
-    widget_kwargs['default'] = default_option
-
     widget = _widgets.Inquire(**widget_kwargs)
 
     if not 'hint' in kwargs:

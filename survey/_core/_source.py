@@ -81,16 +81,16 @@ class Source:
 
     def _get(self):
 
-        text = self._io.recv()
+        rune = self._io.recv()
 
-        if not text:
+        if not rune:
             raise _EmptyRead()
 
         if self._wait:
             self._wait = False
             self._io.wait(False)
 
-        return text
+        return rune
     
     _empty = _ansi.Escape('')
 

@@ -116,7 +116,7 @@ class StreamIO(ModeIO):
 
     def _recv(self):
 
-        text = self._i.read1(1)
+        text = self._i.read1()
 
         return text
 

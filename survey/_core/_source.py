@@ -68,7 +68,7 @@ class Source:
         Used for receiving from input.
     """
 
-    __slots__ = ('_callback', '_io', '_wait', '_lock')
+    __slots__ = ('_callback', '_io', '_lock', '_buffer')
 
     def __init__(self, 
                  callback: _type_Source_init_callback, 
@@ -79,16 +79,25 @@ class Source:
 
         self._lock = threading.RLock()
 
+        self._buffer = []
+
+    def _read(self):
+
+        if self._buffer:
+            return
+        
+        text = self._io.recv()
+
+        self._buffer.extend(text)
+        
     def _get(self):
 
-        rune = self._io.recv()
+        self._read()
 
-        if not rune:
+        try:
+            rune = self._buffer.pop(0)
+        except IndexError:
             raise _EmptyRead()
-
-        if self._wait:
-            self._wait = False
-            self._io.wait(False)
 
         return rune
     
@@ -158,11 +167,7 @@ class Source:
     @_helpers.ctxmethod(lambda self: self._lock)
     def _advance(self):
 
-        self._wait = True
-
         info = self._next()
-
-        self._io.wait(True)
 
         self._process(info)
 

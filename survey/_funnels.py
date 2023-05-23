@@ -133,7 +133,7 @@ def text_min_horizontal(just: JustType,
 
         'The quic k brown fox'
         'jumps ov|er the lazy dog'
-        'and falls on its face'
+        'and fall s on its face'
 
         >>> text_min_horizontal(JustType.center, 25, ' ')
 

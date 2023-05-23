@@ -557,15 +557,6 @@ def mesh_delegate(function: typing.Callable[[list[list[str]], list[int, int]], N
 def _mesh_delimit(axis, rune,
                   tiles, point):
     
-    """
-    Insert text between tiles.
-
-    :param axis:
-        The axis considered for the operation.
-    :param rune:
-        The text to insert.
-    """
-    
     all_a = (spot[axis] for spot in tiles)
     max_a = max(all_a)
 
@@ -584,14 +575,12 @@ def mesh_delimit(axis: int,
                  rune: str):
     
     """
-    Call a function on each tile of the mesh.
+    Insert text between tiles.
 
-    :param function:
-        The function called.
-    :param check:
-        Used as :code:`(spot, tile) -> bool` to denote whether the specific tile gets ignored.
-    :param aware:
-        Whether to prepend the tile's ``spot`` to the function's arguments.
+    :param axis:
+        The axis considered for the operation.
+    :param rune:
+        The text to insert.
     """
 
     return functools.partial(_mesh_delimit, axis, rune)
@@ -671,7 +660,7 @@ def mesh_point(focus_rune: str,
                evade_rune: str):
     
     """
-    Prepend a to the pointed tile's first line and another to all others.
+    Prepend a rune to the pointed tile's first line and another to all others.
 
     All other lines have empty characters prepended to align with the first.
 

@@ -28,7 +28,7 @@ class Graphic(abc.ABC):
 
     :param inline:
         Whether ``\\n`` should **not** be used upon closing.
-    :param frequency:
+    :param throttle:
         Seconds for printing time throttling.
     :param epilogue:
         Shown upon closing instead of the completed graphic.
@@ -41,12 +41,12 @@ class Graphic(abc.ABC):
 
     def __init__(self, 
                  inline   : bool = False, 
-                 frequency: float = 0.1,
+                 throttle : float = 0.1,
                  epilogue : str | typing.Callable[[], str] | None = None):
 
         self._inline = inline
 
-        self._frequency = frequency
+        self._throttle = throttle
         self._time_last = 0
 
         self._epilogue = epilogue
@@ -92,7 +92,7 @@ class Graphic(abc.ABC):
 
         time_next = time.time()
 
-        if check and time_next - self._time_last < self._frequency:
+        if check and time_next - self._time_last < self._throttle:
             return
         
         self._time_last = time_next
@@ -172,9 +172,17 @@ class BaseProgress(Graphic):
 
     """
     Base for progress graphics.
+
+    :param frequency:
+       The amount to wait between automatically adding 1.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, 
+                 *args, 
+                 frequency: float = None,
+                 **kwargs):
+        
+        self._frequency = frequency
 
         self._cycle_actual = 0
         self._cycle_memory = 0
@@ -192,6 +200,28 @@ class BaseProgress(Graphic):
         self._cycle_memory = 0
 
         super()._print(check, *args, **kwargs)
+
+    def _start_auto(self):
+
+        while not self._frequency is None:
+            self._add(1)
+            time.sleep(self._frequency)
+
+    def _start(self):
+
+        super()._start()
+
+        self._frequency_rolling = self._frequency
+
+        self._thread = thread = threading.Thread(target = self._start_auto, daemon = True)
+        
+        thread.start()
+
+    def _close(self):
+
+        self._frequency_rolling = None
+
+        super()._close()
 
     def _set(self, step):
 

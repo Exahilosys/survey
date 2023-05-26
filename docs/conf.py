@@ -8,13 +8,15 @@
 
 import sys
 import os
+import importlib.metadata
+
+sys.path.insert(0, os.path.abspath('..'))
+
 
 project = 'survey'
 author = 'Exahilosys'
 copyright = f'2023, {author}'
-release = '4.0.0'
-
-sys.path.insert(0, os.path.abspath('..'))
+release = importlib.metadata.version(project)
 
 rst_prolog = """
 .. |theme| replace:: 🎨 Theme with

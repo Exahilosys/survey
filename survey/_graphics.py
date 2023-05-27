@@ -203,9 +203,9 @@ class BaseProgress(Graphic):
 
     def _start_auto(self):
 
-        while not self._frequency is None:
+        while not self._frequency_rolling is None:
             self._add(1)
-            time.sleep(self._frequency)
+            time.sleep(self._frequency_rolling)
 
     def _start(self):
 

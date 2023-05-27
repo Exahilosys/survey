@@ -31,21 +31,31 @@ __all__ = ('WidgetError', 'Widget', 'start',
            'Form')
 
 
-class WidgetError(_helpers.InfoErrorMixin, Exception):
+class Abort(_helpers.InfoErrorMixin, Exception):
+
+    """
+    Raised when an invokation needs to stop. May include a message.
+    """
 
     __slots__ = ()
 
 
-class Abort(WidgetError):
+
+class Escape(Exception):
+
+    """
+    Raised when the users pressed the ``Esc`` button.
+    """
 
     __slots__ = ()
 
 
-_type_Widget_init_mutate  : typing.TypeAlias = _mutates.Mutate
-_type_Widget_init_visual  : typing.TypeAlias = _visuals.Visual
-_type_Widget_init_callback: typing.TypeAlias = _handle._type_Handle_init_callback
-_type_Widget_init_delegate: typing.TypeAlias = typing.Callable[[_core.Event], bool]
-_type_Widget_init_validate: typing.TypeAlias = typing.Callable[[typing.Any], None]
+_type_Widget_init_mutate   : typing.TypeAlias = _mutates.Mutate
+_type_Widget_init_visual   : typing.TypeAlias = _visuals.Visual
+_type_Widget_init_callback : typing.TypeAlias = _handle._type_Handle_init_callback
+_type_Widget_init_delegate : typing.TypeAlias = typing.Callable[[_core.Event], bool]
+_type_Widget_init_validate : typing.TypeAlias = typing.Callable[[typing.Any], None]
+_type_Widget_init_escapable: typing.TypeAlias = bool
 
 _type_Widget_invoke_event: typing.TypeAlias = _core.Event
 _type_Widget_invoke_info : typing.TypeAlias = _core._type_ansi_parse_return
@@ -70,7 +80,7 @@ class Widget:
 
     _mark_result_c = object()
 
-    __slots__ = ('_mutate', '_handle', '_visual', '_delegate', '_validate', '_result_c')
+    __slots__ = ('_mutate', '_handle', '_visual', '_delegate', '_validate', '_escapable', '_result_c')
 
     def __init_subclass__(cls, controls = (), **kwargs):
 
@@ -81,11 +91,12 @@ class Widget:
         super().__init_subclass__(**kwargs)
 
     def __init__(self, 
-                 mutate  : _type_Widget_init_mutate, 
-                 visual  : _type_Widget_init_visual, 
-                 callback: _type_Widget_init_callback = None, 
-                 delegate: _type_Widget_init_delegate = None,
-                 validate: _type_Widget_init_validate = None):
+                 mutate   : _type_Widget_init_mutate, 
+                 visual   : _type_Widget_init_visual, 
+                 callback : _type_Widget_init_callback  = None, 
+                 delegate : _type_Widget_init_delegate  = None,
+                 validate : _type_Widget_init_validate  = None,
+                 escapable: _type_Widget_init_escapable = False):
         
         self._delegate = delegate
         self._validate = validate
@@ -100,6 +111,8 @@ class Widget:
 
         self._handle = handle
         self._visual = visual
+
+        self._escapable = escapable
 
     @property
     def mutate(self):
@@ -163,6 +176,9 @@ class Widget:
 
             If :paramref:`.delegate` is provided and returns :code:`False`, nothing happens.
         """
+
+        if self._escapable and event == _core.Event.escape:
+            raise Escape()
 
         self._invoke(event, info)
     
@@ -394,6 +410,7 @@ _type_BaseText_init_multi       : typing.TypeAlias = bool
 _type_BaseText_init_callback    : typing.TypeAlias = _type_Widget_init_callback
 _type_BaseText_init_delegate    : typing.TypeAlias = _type_Widget_init_delegate
 _type_BaseText_init_validate    : typing.TypeAlias = _type_Widget_init_validate
+_type_BaseText_init_escapable   : typing.TypeAlias = _type_Widget_init_escapable
 _type_BaseText_init_funnel_enter: typing.TypeAlias = _visuals._type_Text_init_funnel_enter
 _type_BaseText_init_funnel_leave: typing.TypeAlias = _visuals._type_Text_init_funnel_leave
 
@@ -442,6 +459,7 @@ class BaseText(Widget, controls = _BaseText_controls):
                  callback    : _type_BaseText_init_callback     = None,
                  delegate    : _type_BaseText_init_delegate     = None,
                  validate    : _type_BaseText_init_validate     = None,
+                 escapable   : _type_BaseText_init_escapable    = False,
                  funnel_enter: _type_BaseText_init_funnel_enter = None, 
                  funnel_leave: _type_BaseText_init_funnel_leave = None):
 
@@ -467,7 +485,8 @@ class BaseText(Widget, controls = _BaseText_controls):
             visual,
             callback = callback,
             delegate = delegate,
-            validate = validate
+            validate = validate,
+            escapable = escapable
         )
 
 
@@ -854,6 +873,7 @@ _type_BaseMesh_init_focus       : typing.TypeAlias = bool | typing.Callable[[_co
 _type_BaseMesh_init_callback    : typing.TypeAlias = _type_Widget_init_callback
 _type_BaseMesh_init_delegate    : typing.TypeAlias = _type_Widget_init_delegate
 _type_BaseMesh_init_validate    : typing.TypeAlias = _type_Widget_init_validate
+_type_BaseMesh_init_escapable   : typing.TypeAlias = _type_Widget_init_escapable
 _type_BaseMesh_init_funnel_enter: typing.TypeAlias = _visuals._type_Mesh_init_funnel_enter
 _type_BaseMesh_init_funnel_leave: typing.TypeAlias = _visuals._type_Mesh_init_funnel_leave
 
@@ -897,6 +917,8 @@ class BaseMesh(Widget, controls = _BaseMesh_controls):
         Same as :paramref:`.Widget.delegate`.
     :param validate:
         Same as :paramref:`.Widget.validate`.
+    :param escapable:
+        Same as :paramref:`.Widget.escapable`.
     :param funnel_enter:
         Same as :paramref:`.visuals.Mesh.funnel_enter`.
     :param funnel_leave:
@@ -917,6 +939,7 @@ class BaseMesh(Widget, controls = _BaseMesh_controls):
                  callback    : _type_BaseMesh_init_callback     = None,
                  delegate    : _type_BaseMesh_init_delegate     = None,
                  validate    : _type_BaseMesh_init_validate     = None,
+                 escapable   : _type_BaseMesh_init_escapable    = True,
                  funnel_enter: _type_BaseMesh_init_funnel_enter = None, 
                  funnel_leave: _type_BaseMesh_init_funnel_leave = None):
         
@@ -953,6 +976,7 @@ class BaseMesh(Widget, controls = _BaseMesh_controls):
         super().__init__(
             mutate, 
             visual,
+            escapable = escapable,
             validate = validate,
             delegate = delegate,
             callback = callback

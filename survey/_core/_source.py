@@ -88,6 +88,9 @@ class Source:
         
         text = self._io.recv()
 
+        if text == '\x1b':
+            return
+
         self._buffer.extend(text)
         
     def _get(self):

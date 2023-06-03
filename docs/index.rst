@@ -5,7 +5,7 @@ Installation
 
 .. code-block:: bash
    
-      pip install survey==4.0.0a0
+      pip install survey
 
 Features
 --------

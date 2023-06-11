@@ -18,7 +18,7 @@ __all__ = ('Visual', 'Text', 'Mesh', 'Line')
 
 
 _type_Visual_init_get         : typing.TypeAlias = typing.Callable[[bool, bool], tuple[typing.Any]]
-_type_Visual_init_funnel_enter: typing.TypeAlias = typing.Callable[[typing.Unpack[typing.Any]], None] | None
+_type_Visual_init_funnel_enter: typing.TypeAlias = typing.Callable[[typing.Any], None] | None
 _type_Visual_init_funnel_leave: typing.TypeAlias = typing.Callable[[_core._type_Render_draw_lines, _core._type_Render_draw_point], None] | None
 
 _type_Visual_get_enter        : typing.TypeAlias = bool

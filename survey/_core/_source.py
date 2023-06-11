@@ -19,7 +19,7 @@ class EventType(enum.Enum):
     sequence = _ansi.Sequence
 
 
-class Event(enum.StrEnum):
+class Event(str, enum.Enum):
 
     """
     Event()

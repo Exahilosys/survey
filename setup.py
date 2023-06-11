@@ -5,13 +5,13 @@ with open('README.rst') as file:
 
 author = 'Exahilosys'
 project = 'survey'
-version = '4.3.0'
+version = '4.4.0'
 
 url = 'https://github.com/{0}/{1}'.format(author, project)
 
 setuptools.setup(
     name = project,
-    python_requires = '>=3.11',
+    python_requires = '>=3.10',
     version = version,
     url = url,
     packages = setuptools.find_packages(),

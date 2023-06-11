@@ -74,7 +74,7 @@ def text_replace(rune: typing.Union[str, typing.Callable[[str], str]]):
     return functools.partial(_text_replace, rune)
 
 
-class JustType(enum.StrEnum):
+class JustType(str, enum.Enum):
 
     """
     JustType()

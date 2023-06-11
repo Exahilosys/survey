@@ -79,12 +79,15 @@ def _get_point_wrap(limit: int,
     return (usr_y, usr_x)
 
 
-@dataclasses.dataclass(slots = True, weakref_slot = True, eq = False)
 class Memory:
 
-    y: int
-    x: int
+    __slots__ = ('y', 'x', '__weakref__')
 
+    def __init__(self, y, x):
+
+        self.y = y
+        self.x = x
+    
 
 _type_Render_draw_lines: typing.TypeAlias = list[list[str]]
 _type_Render_draw_point: typing.TypeAlias = list[int, int] | None

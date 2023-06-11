@@ -243,7 +243,7 @@ def _start_get_actor_static(parse: _type_start_start_get_actor_static_parse,
 
 
 _type_start_start_get_actor_dynamic_parse: typing.TypeAlias = _type_start_get_actor_contextual_parse
-_type_start_start_get_actor_dynamic_fetch: typing.TypeAlias = typing.Callable[[typing.Unpack[typing.Any]], tuple[_visuals._type_Text_link_lines, _visuals._type_Text_link_point]]
+_type_start_start_get_actor_dynamic_fetch: typing.TypeAlias = typing.Callable[[typing.Any], tuple[_visuals._type_Text_link_lines, _visuals._type_Text_link_point]]
 
 
 def _start_get_actor_dynamic(parse: _type_start_start_get_actor_dynamic_parse, 

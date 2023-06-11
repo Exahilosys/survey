@@ -14,7 +14,7 @@ from . import _controls
 __all__ = ('EventType', 'Abort', 'Handle')
 
 
-class EventType(enum.StrEnum):
+class EventType(str, enum.Enum):
 
     """
     Flags whether the event is called back before or after invokation.

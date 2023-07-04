@@ -5,14 +5,16 @@ with open('README.rst') as file:
 
 author = 'Exahilosys'
 project = 'survey'
-version = '4.4.0'
 
 url = 'https://github.com/{0}/{1}'.format(author, project)
 
 setuptools.setup(
     name = project,
     python_requires = '>=3.7',
-    version = version,
+    use_scm_version = True,
+    setup_requires = [
+        'setuptools_scm'
+    ],
     url = url,
     packages = setuptools.find_packages(),
     license = 'MIT',

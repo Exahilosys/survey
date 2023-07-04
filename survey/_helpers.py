@@ -83,8 +83,7 @@ def get_point_neighbors(origin, radius):
 
 def get_point_distance_to_point(origin, target):
 
-    return math.dist(origin, target)
-
+    return math.sqrt(sum((px - qx) ** 2.0 for px, qx in zip(origin, target)))
 
 def get_point_distance_to_line(slope, intercept, target):
 
@@ -403,7 +402,7 @@ def get_axis_point(dimensions, axis, default, index):
     return point
 
 
-@functools.cache
+@functools.lru_cache()
 def get_function_parameters(function):
 
     if isinstance(function, type):
@@ -415,14 +414,16 @@ def get_function_parameters(function):
 
     ignore_kinds = {inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD}
 
-    parameters = functools.reduce(operator.or_, (signature.parameters for signature in signatures))
+    parameters = {}
+    for signature in signatures:
+        parameters.update(signature.parameters)
 
     parameters = {name: parameter for (name, parameter) in parameters.items() if not parameter.kind in ignore_kinds}
 
     return parameters
 
 
-@functools.cache
+@functools.lru_cache()
 def get_function_args_names(function):
 
     parameters = get_function_parameters(function)
@@ -436,7 +437,9 @@ def get_function_args_default(function, name):
 
     parameter = parameters[name]
 
-    if (default := parameter.default) is inspect.Parameter.empty:
+    default = parameter.default
+
+    if default is inspect.Parameter.empty:
         raise ValueError(f'parameter "{name}" of {function} has no default')
 
     return default

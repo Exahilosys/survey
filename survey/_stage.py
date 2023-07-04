@@ -34,15 +34,15 @@ def _funnel_text_linesep(force, pre):
     return funnel
 
 
-_type_get_multi_maybe: typing.TypeAlias = bool
-_type_get_multi_force: typing.TypeAlias = bool
-_type_get_site       : typing.TypeAlias = str
-_type_get_info_get   : typing.TypeAlias = _visuals._type_Text_init_get
-_type_get_hint_get   : typing.TypeAlias = _visuals._type_Text_init_get
-_type_get_body_get   : typing.TypeAlias = _visuals._type_Text_init_get
-_type_get_info_color : typing.TypeAlias = str
-_type_get_hint_color : typing.TypeAlias = str
-_type_get_warn_color : typing.TypeAlias = str
+_type_get_multi_maybe = bool
+_type_get_multi_force = bool
+_type_get_site        = str
+_type_get_info_get    = _visuals._type_Text_init_get
+_type_get_hint_get    = _visuals._type_Text_init_get
+_type_get_body_get    = _visuals._type_Text_init_get
+_type_get_info_color  = str
+_type_get_hint_color  = str
+_type_get_warn_color  = str
 
 
 def _get(multi_maybe: _type_get_multi_maybe,

@@ -309,7 +309,7 @@ def _text_max_dynamic(get,
 
 
 @_call_direct
-def text_max_dynamic(get: typing.Callable[[], tuple[int, int]]):
+def text_max_dynamic(get: typing.Callable[[], typing.Tuple[int, int]]):
     
     """
     A combination of :func:`.text_max_horizontal` and :func:`.text_max_vertical`.
@@ -536,8 +536,8 @@ def _mesh_delegate(check, aware, function,
 
 
 @_call_direct
-def mesh_delegate(function: typing.Callable[[list[list[str]], list[int, int]], None], 
-                  check   : typing.Callable[[tuple[int, int], list[list[list[str]]], list[int, int]], bool] = None, 
+def mesh_delegate(function: typing.Callable[[typing.List[typing.List[str]], typing.List[int]], None], 
+                  check   : typing.Callable[[typing.Tuple[int, int], typing.List[typing.List[typing.List[str]]], typing.List[int]], bool] = None, 
                   aware   : bool = False):
     
     """
@@ -624,8 +624,8 @@ def _mesh_light(focus_color, evade_color,
 
 
 @_call_direct
-def mesh_light(focus_color: str | None = None,
-               evade_color: str | None = None):
+def mesh_light(focus_color: typing.Union[str, None] = None,
+               evade_color: typing.Union[str, None] = None):
     
     """
     Paint the mesh's tiles depending on whether they are pointed.
@@ -761,7 +761,7 @@ def _mesh_min(axis, just, size, fill,
 def mesh_min(axis: int, 
              size: int, 
              just: JustType = JustType.start, 
-             fill: typing.Callable[[tuple[int, int]], list[list[str]]] = lambda spot: [[]]):
+             fill: typing.Callable[[typing.Tuple[int, int]], typing.List[typing.List[str]]] = lambda spot: [[]]):
     
     """
     Ensure there is most of a certain amount of tiles along an certain axis, aligned accordingly by ``fill``\ing with new tiles.
@@ -933,7 +933,7 @@ def _mesh_grid_get_text_block_runes(get, spots, spot):
 
 def _mesh_grid(runes, runes_color, tiles, point, **mesh_grid_fill_kwargs):
 
-    @functools.cache
+    @functools.lru_cache()
     def get_rune(name):
         rune = runes[name]
         if not runes_color is None:
@@ -984,7 +984,7 @@ def _mesh_grid(runes, runes_color, tiles, point, **mesh_grid_fill_kwargs):
         
 
 @_call_direct
-def mesh_grid(runes: dict[str, str] = {
+def mesh_grid(runes: typing.Dict[str, str] = {
                 'horizontal': '─',
                 'vertical': '│',
                 'cross': '┼',
@@ -1065,8 +1065,8 @@ def _mesh_head(axis, just, skip, min, get,
 
 @_call_direct
 def mesh_head(axis: int, 
-              get : typing.Callable[[int], list[list[str]]], 
-              just: JustType | None = None,
+              get : typing.Callable[[int], typing.List[typing.List[str]]], 
+              just: typing.Union[JustType, None] = None,
               skip: int = 0, 
               min : int = 0):
     

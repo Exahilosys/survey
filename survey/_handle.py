@@ -33,12 +33,12 @@ class Abort(Exception):
     __slots__ = ()
 
 
-_type_Handle_init_unsafe  : typing.TypeAlias = bool
-_type_Handle_init_callback: typing.TypeAlias = typing.Callable[[tuple[EventType, _core.Event], _core._type_ansi_parse_return], None]
+_type_Handle_init_unsafe   = bool
+_type_Handle_init_callback = typing.Callable[[typing.Tuple[EventType, _core.Event], _core._type_ansi_parse_return], None]
 
-_type_Handle_add_control  : typing.TypeAlias = _controls.Control
+_type_Handle_add_control   = _controls.Control
 
-_type_Handle_invoke_event : typing.TypeAlias = _core.Event
+_type_Handle_invoke_event  = _core.Event
 
 
 class Handle:

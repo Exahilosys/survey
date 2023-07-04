@@ -174,7 +174,7 @@ def _color_bit8_info_get(layer, part):
     return _get(*args, part)
 
 
-def standard(part: str, /, layer: str = _color_default_layer) -> str:
+def standard(part: str, layer: str = _color_default_layer) -> str:
 
     """
     Get a standard ansi color by value (`8 bit docs <https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit>`_).
@@ -207,7 +207,7 @@ def _color_bit24_get(layer, part_r, part_g, part_b):
     return _get(*args, part_r, part_g, part_b)
 
 
-def full(part_r: int, part_g: int, part_b: int, /, layer: str = _color_default_layer) -> str:
+def full(part_r: int, part_g: int, part_b: int, layer: str = _color_default_layer) -> str:
 
     """
     Get a full rgb ansi color by the respective values (`224 bit docs <https://en.wikipedia.org/wiki/ANSI_escape_code#24-bit>`_).

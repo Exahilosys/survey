@@ -50,15 +50,15 @@ class Escape(Exception):
     __slots__ = ()
 
 
-_type_Widget_init_mutate   : typing.TypeAlias = _mutates.Mutate
-_type_Widget_init_visual   : typing.TypeAlias = _visuals.Visual
-_type_Widget_init_callback : typing.TypeAlias = _handle._type_Handle_init_callback
-_type_Widget_init_delegate : typing.TypeAlias = typing.Callable[[_core.Event], bool]
-_type_Widget_init_validate : typing.TypeAlias = typing.Callable[[typing.Any], None]
-_type_Widget_init_escapable: typing.TypeAlias = bool
+_type_Widget_init_mutate    = _mutates.Mutate
+_type_Widget_init_visual    = _visuals.Visual
+_type_Widget_init_callback  = _handle._type_Handle_init_callback
+_type_Widget_init_delegate  = typing.Callable[[_core.Event], bool]
+_type_Widget_init_validate  = typing.Callable[[typing.Any], None]
+_type_Widget_init_escapable = bool
 
-_type_Widget_invoke_event: typing.TypeAlias = _core.Event
-_type_Widget_invoke_info : typing.TypeAlias = _core._type_ansi_parse_return
+_type_Widget_invoke_event = _core.Event
+_type_Widget_invoke_info  = _core._type_ansi_parse_return
 
 
 class Widget:
@@ -133,17 +133,22 @@ class Widget:
         Get the resolved value.
         """
 
-        if (result := self._result_c) is self._mark_result_c:
+        result = self._result_c
+        if result is self._mark_result_c:
             result = self._resolve()
 
         return result
     
     def _invoke_validate(self):
 
-        if (validate := self._validate) is None:
+        validate = self._validate
+
+        if validate is None:
             return
 
-        if (result := self._result_c) is self._mark_result_c:
+        result = self._result_c
+
+        if result is self._mark_result_c:
             result = self._result_c = self._resolve()
 
         validate(result)
@@ -212,8 +217,8 @@ def _start_variant_parse(parse, value):
     return value
 
 
-_type_start_get_actor_contextual_parse  : typing.TypeAlias = bool
-_type_start_get_actor_contextual_context: typing.TypeAlias = contextvars.ContextVar
+_type_start_get_actor_contextual_parse   = bool
+_type_start_get_actor_contextual_context = contextvars.ContextVar
 
 
 def _start_get_actor_contextual(parse  : _type_start_get_actor_contextual_parse,
@@ -226,8 +231,8 @@ def _start_get_actor_contextual(parse  : _type_start_get_actor_contextual_parse,
     return wrapper
 
 
-_type_start_start_get_actor_static_parse: typing.TypeAlias = _type_start_get_actor_contextual_parse
-_type_start_start_get_actor_static_value: typing.TypeAlias = str | list[list[str]]
+_type_start_start_get_actor_static_parse = _type_start_get_actor_contextual_parse
+_type_start_start_get_actor_static_value = typing.Union[str, typing.List[typing.List[str]]]
 
 
 def _start_get_actor_static(parse: _type_start_start_get_actor_static_parse, 
@@ -242,8 +247,8 @@ def _start_get_actor_static(parse: _type_start_start_get_actor_static_parse,
     return wrapper
 
 
-_type_start_start_get_actor_dynamic_parse: typing.TypeAlias = _type_start_get_actor_contextual_parse
-_type_start_start_get_actor_dynamic_fetch: typing.TypeAlias = typing.Callable[[typing.Any], tuple[_visuals._type_Text_link_lines, _visuals._type_Text_link_point]]
+_type_start_start_get_actor_dynamic_parse = _type_start_get_actor_contextual_parse
+_type_start_start_get_actor_dynamic_fetch = typing.Callable[[typing.Any], typing.Tuple[_visuals._type_Text_link_lines, _visuals._type_Text_link_point]]
 
 
 def _start_get_actor_dynamic(parse: _type_start_start_get_actor_dynamic_parse, 
@@ -259,8 +264,8 @@ def _start_get_actor_dynamic(parse: _type_start_start_get_actor_dynamic_parse,
     return wrapper, updater
 
 
-_type_start_get_actor_dichotomic_parse: typing.TypeAlias = _type_start_get_actor_contextual_parse
-_type_start_get_actor_dichotomic_value: typing.TypeAlias = _type_start_start_get_actor_static_value | _type_start_start_get_actor_dynamic_fetch
+_type_start_get_actor_dichotomic_parse = _type_start_get_actor_contextual_parse
+_type_start_get_actor_dichotomic_value = typing.Union[_type_start_start_get_actor_static_value, _type_start_start_get_actor_dynamic_fetch]
 
 
 def _start_get_actor_dichotomic(parse: _type_start_get_actor_dichotomic_parse, 
@@ -277,18 +282,18 @@ def _start_get_actor_dichotomic(parse: _type_start_get_actor_dichotomic_parse,
 
 _start_warn_reset_lines = [[]]
 
-_type_start_multi_pre  =        _stage._type_get_multi_maybe
-_type_start_multi_aft  =        bool
-_type_start_widget     =        Widget
-_type_start_show       = None | str
-_type_start_mark       = None | str
-_type_start_mark_color =        str
-_type_start_info       =        _type_start_get_actor_dichotomic_value
-_type_start_info_parse =        _type_start_get_actor_dichotomic_parse
-_type_start_hint       =        _type_start_get_actor_dichotomic_value
-_type_start_hint_parse =        _type_start_get_actor_dichotomic_parse
-_type_start_site       =        _stage._type_get_site
-_type_start_reply      = None | typing.Callable[[Widget, typing.Any], str]
+_type_start_multi_pre  = _stage._type_get_multi_maybe
+_type_start_multi_aft  = bool
+_type_start_widget     = Widget
+_type_start_show       = typing.Union[None, str]
+_type_start_mark       = typing.Union[None, str]
+_type_start_mark_color = str
+_type_start_info       = _type_start_get_actor_dichotomic_value
+_type_start_info_parse = _type_start_get_actor_dichotomic_parse
+_type_start_hint       = _type_start_get_actor_dichotomic_value
+_type_start_hint_parse = _type_start_get_actor_dichotomic_parse
+_type_start_site       = _stage._type_get_site
+_type_start_reply      = typing.Union[None, typing.Callable[[Widget, typing.Any], str]]
 
 
 def _start(multi_pre : _type_start_multi_pre, 
@@ -374,8 +379,9 @@ def _start(multi_pre : _type_start_multi_pre,
             raise _core.SkipDraw()
         except Abort as error:
             widget.mutate.set_state(memory)
-            if not (text := error.text) is None:
-                lines = _helpers.split_lines(text)
+            message = error.text
+            if not message is None:
+                lines = _helpers.split_lines(message)
                 _stage.warn(lines)
             _system.io.ring()
 
@@ -404,15 +410,15 @@ def _start(multi_pre : _type_start_multi_pre,
 start = _start
 
 
-_type_BaseText_init_lines       : typing.TypeAlias = _mutates._type_Text_init_lines 
-_type_BaseText_init_point       : typing.TypeAlias = _mutates._type_Text_init_point
-_type_BaseText_init_multi       : typing.TypeAlias = bool
-_type_BaseText_init_callback    : typing.TypeAlias = _type_Widget_init_callback
-_type_BaseText_init_delegate    : typing.TypeAlias = _type_Widget_init_delegate
-_type_BaseText_init_validate    : typing.TypeAlias = _type_Widget_init_validate
-_type_BaseText_init_escapable   : typing.TypeAlias = _type_Widget_init_escapable
-_type_BaseText_init_funnel_enter: typing.TypeAlias = _visuals._type_Text_init_funnel_enter
-_type_BaseText_init_funnel_leave: typing.TypeAlias = _visuals._type_Text_init_funnel_leave
+_type_BaseText_init_lines        = _mutates._type_Text_init_lines 
+_type_BaseText_init_point        = _mutates._type_Text_init_point
+_type_BaseText_init_multi        = bool
+_type_BaseText_init_callback     = _type_Widget_init_callback
+_type_BaseText_init_delegate     = _type_Widget_init_delegate
+_type_BaseText_init_validate     = _type_Widget_init_validate
+_type_BaseText_init_escapable    = _type_Widget_init_escapable
+_type_BaseText_init_funnel_enter = _visuals._type_Text_init_funnel_enter
+_type_BaseText_init_funnel_leave = _visuals._type_Text_init_funnel_leave
 
 
 _BaseText_controls = (
@@ -490,8 +496,8 @@ class BaseText(Widget, controls = _BaseText_controls):
         )
 
 
-_type_Input_init_value: typing.TypeAlias = str
-_type_Input_init_index: typing.TypeAlias = int
+_type_Input_init_value = str
+_type_Input_init_index = int
 
 
 class Input(BaseText):
@@ -544,10 +550,10 @@ class Input(BaseText):
         return value
     
 
-_type_Numeric_init_value                : typing.TypeAlias = int
-_type_Numeric_init_decimal              : typing.TypeAlias = bool
-_type_Numeric_init_zfill                : typing.TypeAlias = int
-_type_Numeric_init_invalid_value_message: typing.TypeAlias = str
+_type_Numeric_init_value                 = int
+_type_Numeric_init_decimal               = bool
+_type_Numeric_init_zfill                 = int
+_type_Numeric_init_invalid_value_message = str
 
 
 class Numeric(Input):
@@ -646,8 +652,8 @@ class Numeric(Input):
         return result
 
 
-_type_Conceal_init_rune : typing.TypeAlias =        str
-_type_Conceal_init_color: typing.TypeAlias = None | int 
+_type_Conceal_init_rune  = str
+_type_Conceal_init_color = typing.Union[None, int]
 
 
 class Conceal(Input):
@@ -689,10 +695,10 @@ class Conceal(Input):
         super().__init__(*args, funnel_leave = funnel_leave, **kwargs)
 
 
-_type_AutoSubmit_init_evaluate : typing.TypeAlias =        typing.Callable[[str], None]
-_type_AutoSubmit_init_validate : typing.TypeAlias =        typing.Callable[[str], bool]
-_type_AutoSubmit_init_default  : typing.TypeAlias =        typing.Any
-_type_AutoSubmit_init_transform: typing.TypeAlias = None | typing.Callable[[str], str]
+_type_AutoSubmit_init_evaluate  = typing.Callable[[str], None]
+_type_AutoSubmit_init_validate  = typing.Callable[[str], bool]
+_type_AutoSubmit_init_default   = typing.Any
+_type_AutoSubmit_init_transform = typing.Union[None, typing.Callable[[str], str]]
 
 
 class AutoSubmit(Input):
@@ -774,8 +780,8 @@ class AutoSubmit(Input):
         )
             
 
-_type_Inquire_init_options : typing.TypeAlias = dict[str: typing.Any]
-_type_Inquire_init_tranform: typing.TypeAlias = _type_AutoSubmit_init_transform
+_type_Inquire_init_options  = typing.Dict[str, typing.Any]
+_type_Inquire_init_tranform = _type_AutoSubmit_init_transform
     
 
 class Inquire(AutoSubmit):
@@ -862,20 +868,20 @@ def _get_mesh_spot(*args, **kwargs):
     return tuple(point)
 
 
-_type_BaseMesh_init_search      : typing.TypeAlias = _mutates._type_Mesh_init_score
-_type_BaseMesh_init_create      : typing.TypeAlias = _mutates._type_Mesh_init_create
-_type_BaseMesh_init_tiles       : typing.TypeAlias = _mutates._type_Mesh_init_tiles
-_type_BaseMesh_init_point       : typing.TypeAlias = _mutates._type_Mesh_init_point
-_type_BaseMesh_init_clean       : typing.TypeAlias = _mutates._type_Mesh_init_clean
-_type_BaseMesh_init_scout       : typing.TypeAlias = _mutates._type_Mesh_init_scout
-_type_BaseMesh_init_rigid       : typing.TypeAlias = _mutates._type_Mesh_init_rigid
-_type_BaseMesh_init_focus       : typing.TypeAlias = bool | typing.Callable[[_core.Event], bool] 
-_type_BaseMesh_init_callback    : typing.TypeAlias = _type_Widget_init_callback
-_type_BaseMesh_init_delegate    : typing.TypeAlias = _type_Widget_init_delegate
-_type_BaseMesh_init_validate    : typing.TypeAlias = _type_Widget_init_validate
-_type_BaseMesh_init_escapable   : typing.TypeAlias = _type_Widget_init_escapable
-_type_BaseMesh_init_funnel_enter: typing.TypeAlias = _visuals._type_Mesh_init_funnel_enter
-_type_BaseMesh_init_funnel_leave: typing.TypeAlias = _visuals._type_Mesh_init_funnel_leave
+_type_BaseMesh_init_search       = _mutates._type_Mesh_init_score
+_type_BaseMesh_init_create       = _mutates._type_Mesh_init_create
+_type_BaseMesh_init_tiles        = _mutates._type_Mesh_init_tiles
+_type_BaseMesh_init_point        = _mutates._type_Mesh_init_point
+_type_BaseMesh_init_clean        = _mutates._type_Mesh_init_clean
+_type_BaseMesh_init_scout        = _mutates._type_Mesh_init_scout
+_type_BaseMesh_init_rigid        = _mutates._type_Mesh_init_rigid
+_type_BaseMesh_init_focus        = typing.Union[bool, typing.Callable[[_core.Event], bool] ]
+_type_BaseMesh_init_callback     = _type_Widget_init_callback
+_type_BaseMesh_init_delegate     = _type_Widget_init_delegate
+_type_BaseMesh_init_validate     = _type_Widget_init_validate
+_type_BaseMesh_init_escapable    = _type_Widget_init_escapable
+_type_BaseMesh_init_funnel_enter = _visuals._type_Mesh_init_funnel_enter
+_type_BaseMesh_init_funnel_leave = _visuals._type_Mesh_init_funnel_leave
 
 
 _BaseMesh_controls = (
@@ -1026,16 +1032,16 @@ class BaseMesh(Widget, controls = _BaseMesh_controls):
             self._invoke_blear(event, *args, **kwargs)
 
 
-_type_BaseList_init_tiles      : typing.TypeAlias =        list[Widget] | _type_BaseMesh_init_tiles
-_type_BaseList_init_axis       : typing.TypeAlias =        int
-_type_BaseList_init_index      : typing.TypeAlias =        int
-_type_BaseList_init_label      : typing.TypeAlias = None | typing.Callable[[int], str]
-_type_BaseList_init_view_max   : typing.TypeAlias = None | int
-_type_BaseList_init_focus_color: typing.TypeAlias = None | str
-_type_BaseList_init_focus_mark : typing.TypeAlias = None | str
-_type_BaseList_init_evade_color: typing.TypeAlias = None | str
-_type_BaseList_init_evade_mark : typing.TypeAlias = None | str
-_type_BaseList_init_fill       : typing.TypeAlias = bool
+_type_BaseList_init_tiles       = typing.Union[typing.List[Widget], _type_BaseMesh_init_tiles]
+_type_BaseList_init_axis        = int
+_type_BaseList_init_index       = int
+_type_BaseList_init_label       = typing.Union[None, typing.Callable[[int], str]]
+_type_BaseList_init_view_max    = typing.Union[None, int]
+_type_BaseList_init_focus_color = typing.Union[None, str]
+_type_BaseList_init_focus_mark  = typing.Union[None, str]
+_type_BaseList_init_evade_color = typing.Union[None, str]
+_type_BaseList_init_evade_mark  = typing.Union[None, str]
+_type_BaseList_init_fill        = bool
 
 
 _BaseList_controls = (
@@ -1173,9 +1179,9 @@ class BaseList(BaseMesh, controls = _BaseList_controls):
         return index
 
 
-_type_Select_init_options: typing.TypeAlias =        list[str]
-_type_Select_init_create : typing.TypeAlias = None | typing.Callable[[_mutates._type_Mesh_init_spot], str]
-_type_Select_init_Option : typing.TypeAlias =        Input
+_type_Select_init_options = typing.List[str]
+_type_Select_init_create  = typing.Union[None, typing.Callable[[_mutates._type_Mesh_init_spot], str]]
+_type_Select_init_Option  = Input
 
 
 class Select(BaseList):
@@ -1241,12 +1247,12 @@ class Select(BaseList):
         )
 
 
-_type_Basket_init_options      : typing.TypeAlias = list[str]
-_type_Basket_init_active       : typing.TypeAlias = list[int]
-_type_Basket_init_positive_mark: typing.TypeAlias = str
-_type_Basket_init_negative_mark: typing.TypeAlias = str
-_type_Basket_init_Option       : typing.TypeAlias = Input
-_type_Basket_init_Stamp        : typing.TypeAlias = Select
+_type_Basket_init_options       = typing.List[str]
+_type_Basket_init_active        = typing.List[int]
+_type_Basket_init_positive_mark = str
+_type_Basket_init_negative_mark = str
+_type_Basket_init_Option        = Input
+_type_Basket_init_Stamp         = Select
 
 
 _Basket_focus_events = {
@@ -1395,11 +1401,11 @@ class Basket(BaseList):
         return indexes
 
 
-_type_Count_init_value  : typing.TypeAlias =        int | float
-_type_Count_init_rate   : typing.TypeAlias =        int | float
-_type_Count_init_convert: typing.TypeAlias = None | typing.Callable[[_type_Count_init_value], _type_Count_init_value]
-_type_Count_init_decimal: typing.TypeAlias = None | bool
-_type_Count_init_Numeric: typing.TypeAlias =        Numeric
+_type_Count_init_value   = typing.Union[int, float]
+_type_Count_init_rate    = typing.Union[int, float]
+_type_Count_init_convert = typing.Union[None, typing.Callable[[_type_Count_init_value], _type_Count_init_value]]
+_type_Count_init_decimal = typing.Union[None, bool]
+_type_Count_init_Numeric = Numeric
     
 
 _Count_focus_events = {
@@ -1462,7 +1468,8 @@ class Count(BaseList):
         
         def create(spot):
             value = offset - sum(spot) * rate
-            if (decimal := self._decimal) is None:
+            decimal = self._decimal
+            if decimal is None:
                 decimal = True
             if not convert is None:
                 value = convert(value) 
@@ -1486,8 +1493,9 @@ class Count(BaseList):
     def _resolve(self):
 
         value_any = self._mutate.cur_tile.resolve()
+        value_int = int(value_any)
 
-        if self._decimal is None and (value_int := int(value_any)) == value_any:
+        if self._decimal is None and value_int == value_any:
             value_any = value_int
 
         return value_any
@@ -1563,12 +1571,12 @@ _Datetime_zfills = {
 }
 
 
-_type_DateTime_init_value       : typing.TypeAlias = datetime.datetime
-_type_DateTime_init_Chron       : typing.TypeAlias = Count
-_type_DateTime_init_attrs       : typing.TypeAlias = list[str]
-_type_DateTime_init_date_delimit: typing.TypeAlias = str
-_type_DateTime_init_time_delimit: typing.TypeAlias = str
-_type_DateTime_init_part_delimit: typing.TypeAlias = str
+_type_DateTime_init_value        = datetime.datetime
+_type_DateTime_init_Chron        = Count
+_type_DateTime_init_attrs        = typing.List[str]
+_type_DateTime_init_date_delimit = str
+_type_DateTime_init_time_delimit = str
+_type_DateTime_init_part_delimit = str
 
 
 class DateTime(BaseList):

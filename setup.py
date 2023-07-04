@@ -11,7 +11,7 @@ url = 'https://github.com/{0}/{1}'.format(author, project)
 
 setuptools.setup(
     name = project,
-    python_requires = '>=3.10',
+    python_requires = '>=3.7',
     version = version,
     url = url,
     packages = setuptools.find_packages(),

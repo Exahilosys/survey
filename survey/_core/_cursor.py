@@ -102,7 +102,7 @@ class Cursor:
 
         self._send('A', size)
 
-    def up(self, size: int | None = None):
+    def up(self, size: typing.Union[int, None] = None):
 
         """
         Move up. No effect if at the edge of the screen.
@@ -117,7 +117,7 @@ class Cursor:
 
         self._send('B', size)
 
-    def down(self, size: int | None = None):
+    def down(self, size: typing.Union[int, None] = None):
 
         """
         Move down. No effect if at the edge of the screen.
@@ -132,7 +132,7 @@ class Cursor:
 
         self._send('D', size)
 
-    def left(self, size: int | None = None):
+    def left(self, size: typing.Union[int, None] = None):
 
         """
         Move left. No effect if at the edge of the screen.
@@ -147,7 +147,7 @@ class Cursor:
 
         self._send('C', size)
 
-    def right(self, size: int | None = None):
+    def right(self, size: typing.Union[int, None] = None):
 
         """
         Move right. No effect if at the edge of the screen.
@@ -177,7 +177,7 @@ class Cursor:
 
         self._send('F', size)
 
-    def last(self, size: int | None = None):
+    def last(self, size: typing.Union[int, None] = None):
 
         """
         Move up at line start.
@@ -192,7 +192,7 @@ class Cursor:
 
         self._send('E', size)
 
-    def next(self, size: int | None = None):
+    def next(self, size: typing.Union[int, None] = None):
 
         """
         Move down at line start.
@@ -207,7 +207,7 @@ class Cursor:
 
         self._send('f', y, x)
 
-    def move(self, y: int | None = None, x: int | None = None):
+    def move(self, y: typing.Union[int, None] = None, x: typing.Union[int, None] = None):
 
         """
         Move absolutely on screen.
@@ -314,7 +314,7 @@ class Cursor:
 
         return point
 
-    def locate(self) -> tuple[int, int]:
+    def locate(self) -> typing.Tuple[int, int]:
 
         """
         Get the current absolute vertical and horizontal coordinates.
@@ -342,7 +342,7 @@ class Cursor:
 
         return point
 
-    def measure(self) -> tuple[int, int]:
+    def measure(self) -> typing.Tuple[int, int]:
 
         """
         Get the maximum possible vertical and horizontal coordinates.

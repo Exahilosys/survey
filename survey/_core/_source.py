@@ -54,7 +54,7 @@ class _EmptyRead(Exception):
     __slots__ = ()
 
 
-_type_Source_init_callback: typing.TypeAlias = typing.Callable[[Event, _ansi._type_parse_return], None]
+_type_Source_init_callback = typing.Callable[[Event, _ansi._type_parse_return], None]
 
 
 class Source:

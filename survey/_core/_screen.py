@@ -9,7 +9,7 @@ from . import _render
 __all__ = ('Screen',)
 
 
-_type_Screen_draw_sketch: typing.TypeAlias = typing.Callable[[], tuple[_render._type_Render_draw_lines, _render._type_Render_draw_point]]
+_type_Screen_draw_sketch = typing.Callable[[], typing.Tuple[_render._type_Render_draw_lines, _render._type_Render_draw_point]]
 
 
 class Screen:

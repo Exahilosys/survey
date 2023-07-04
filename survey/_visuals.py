@@ -17,13 +17,13 @@ from . import _core
 __all__ = ('Visual', 'Text', 'Mesh', 'Line')
 
 
-_type_Visual_init_get         : typing.TypeAlias = typing.Callable[[bool, bool], tuple[typing.Any]]
-_type_Visual_init_funnel_enter: typing.TypeAlias = typing.Callable[[typing.Any], None] | None
-_type_Visual_init_funnel_leave: typing.TypeAlias = typing.Callable[[_core._type_Render_draw_lines, _core._type_Render_draw_point], None] | None
+_type_Visual_init_get          = typing.Callable[[bool, bool], typing.Tuple[typing.Any]]
+_type_Visual_init_funnel_enter = typing.Union[typing.Callable[[typing.Any], None], None]
+_type_Visual_init_funnel_leave = typing.Union[typing.Callable[[_core._type_Render_draw_lines, _core._type_Render_draw_point], None], None]
 
-_type_Visual_get_enter        : typing.TypeAlias = bool
-_type_Visual_get_leave        : typing.TypeAlias = bool
-_type_Visual_get_return       : typing.TypeAlias = tuple[_core._type_Render_draw_lines, _core._type_Render_draw_point] | None
+_type_Visual_get_enter         = bool
+_type_Visual_get_leave         = bool
+_type_Visual_get_return        = typing.Union[typing.Tuple[_core._type_Render_draw_lines, _core._type_Render_draw_point] , None]
 
 
 class Visual(abc.ABC):
@@ -88,12 +88,12 @@ class Visual(abc.ABC):
         return (lines, point)
 
 
-_type_Text_link_lines       : typing.TypeAlias = list[list[str]]
-_type_Text_link_point       : typing.TypeAlias = list[int, int]
+_type_Text_link_lines        = typing.List[typing.List[str]]
+_type_Text_link_point        = typing.List[int]
 
-_type_Text_init_get         : typing.TypeAlias = typing.Callable[[bool, bool], tuple[_type_Text_link_lines, _type_Text_link_point]]
-_type_Text_init_funnel_enter: typing.TypeAlias = typing.Callable[[_type_Text_link_lines, _type_Text_link_point], None] | None
-_type_Text_init_funnel_leave: typing.TypeAlias = _type_Visual_init_funnel_leave
+_type_Text_init_get          = typing.Callable[[bool, bool], typing.Tuple[_type_Text_link_lines, _type_Text_link_point]]
+_type_Text_init_funnel_enter = typing.Union[typing.Callable[[_type_Text_link_lines, _type_Text_link_point], None], None]
+_type_Text_init_funnel_leave = _type_Visual_init_funnel_leave
 
 
 class Text(Visual):
@@ -138,12 +138,12 @@ class Text(Visual):
         return (lines, point)
     
 
-_type_Mesh_link_tiles       : typing.TypeAlias = dict[tuple[int, int], tuple[_type_Text_link_lines, _type_Text_link_point]]
-_type_Mesh_link_point       : typing.TypeAlias = list[int, int]
+_type_Mesh_link_tiles        = typing.Dict[typing.Tuple[int, int], typing.Tuple[_type_Text_link_lines, _type_Text_link_point]]
+_type_Mesh_link_point        = typing.List[int]
 
-_type_Mesh_init_get         : typing.TypeAlias = typing.Callable[[bool, bool], tuple[_type_Mesh_link_tiles, _type_Mesh_link_point]]
-_type_Mesh_init_funnel_enter: typing.TypeAlias = typing.Callable[[_type_Mesh_link_tiles, _type_Mesh_link_point], None] | None
-_type_Mesh_init_funnel_leave: typing.TypeAlias = _type_Visual_init_funnel_leave
+_type_Mesh_init_get          = typing.Callable[[bool, bool], typing.Tuple[_type_Mesh_link_tiles, _type_Mesh_link_point]]
+_type_Mesh_init_funnel_enter = typing.Union[typing.Callable[[_type_Mesh_link_tiles, _type_Mesh_link_point], None], None]
+_type_Mesh_init_funnel_leave = _type_Visual_init_funnel_leave
 
 
 class Mesh(Visual):
@@ -242,12 +242,12 @@ class Mesh(Visual):
         return (done_lines, done_point)
 
 
-_type_Line_link_tiles       : typing.TypeAlias = dict[tuple[int, int], tuple[_type_Text_link_lines, _type_Mesh_link_point]]
-_type_Line_link_point       : typing.TypeAlias = list[int]
+_type_Line_link_tiles        = typing.Dict[typing.Tuple[int, int], typing.Tuple[_type_Text_link_lines, _type_Mesh_link_point]]
+_type_Line_link_point        = typing.List[int]
 
-_type_Line_init_get         : typing.TypeAlias = typing.Callable[[bool, bool], tuple[_type_Line_link_tiles, _type_Line_link_point]]
-_type_Line_init_funnel_enter: typing.TypeAlias = typing.Callable[[_type_Line_link_tiles, _type_Line_link_point], None] | None
-_type_Line_init_funnel_leave: typing.TypeAlias = _type_Visual_init_funnel_leave
+_type_Line_init_get          = typing.Callable[[bool, bool], typing.Tuple[_type_Line_link_tiles, _type_Line_link_point]]
+_type_Line_init_funnel_enter = typing.Union[typing.Callable[[_type_Line_link_tiles, _type_Line_link_point], None], None]
+_type_Line_init_funnel_leave = _type_Visual_init_funnel_leave
 
 
 class Line(Visual):

@@ -58,7 +58,7 @@ class Mutate(abc.ABC):
         return self._set_state(state)
     
 
-_type_cursor_point: typing.TypeAlias = list[int]
+_type_cursor_point = typing.List[int]
     
 
 class Cursor(Mutate):
@@ -102,7 +102,7 @@ class Cursor(Mutate):
             self._point[axis] = coordinate
 
     def move(self, 
-             instructions: list[tuple[int, int]]) -> None:
+             instructions: typing.List[typing.Tuple[int, int]]) -> None:
 
         """
         Move according to the instructions given. 
@@ -113,10 +113,10 @@ class Cursor(Mutate):
         self._move(instructions)
 
 
-_type_Text_init_rune : typing.TypeAlias = str
-_type_Text_init_line : typing.TypeAlias = list[_type_Text_init_rune]
-_type_Text_init_lines: typing.TypeAlias = list[_type_Text_init_line]
-_type_Text_init_point: typing.TypeAlias = _type_cursor_point
+_type_Text_init_rune  = str
+_type_Text_init_line  = typing.List[_type_Text_init_rune]
+_type_Text_init_lines = typing.List[_type_Text_init_line]
+_type_Text_init_point = _type_cursor_point
 
 
 class Text(Mutate):
@@ -192,7 +192,7 @@ class Text(Mutate):
         cur_line[cur_x:cur_x] = runes
 
     def insert(self, 
-               runes: list[str]):
+               runes: typing.List[str]):
 
         """
         Insert text at the current cursor position and move it accordingly.
@@ -342,15 +342,15 @@ class Text(Mutate):
         self._newline()
 
 
-_type_Mesh_init_clean : typing.TypeAlias = None | int
-_type_Mesh_init_spot  : typing.TypeAlias =        tuple[int, int]
-_type_Mesh_init_tile  : typing.TypeAlias =        typing.Any
-_type_Mesh_init_tiles : typing.TypeAlias =        dict[_type_Mesh_init_spot, _type_Mesh_init_tile]
-_type_Mesh_init_point : typing.TypeAlias =        _type_cursor_point
-_type_Mesh_init_score : typing.TypeAlias = None | typing.Callable[[_type_Text_init_lines, _type_Mesh_init_tile], int | None]
-_type_Mesh_init_scout : typing.TypeAlias = None | typing.Callable[[_type_Mesh_init_spot], bool]
-_type_Mesh_init_rigid : typing.TypeAlias =        bool
-_type_Mesh_init_create: typing.TypeAlias = None | typing.Callable[[_type_Mesh_init_spot], _type_Mesh_init_tile | None]
+_type_Mesh_init_clean  = typing.Union[None, int]
+_type_Mesh_init_spot   = typing.Tuple[int, int]
+_type_Mesh_init_tile   = typing.Any
+_type_Mesh_init_tiles  = typing.Dict[_type_Mesh_init_spot, _type_Mesh_init_tile]
+_type_Mesh_init_point  = _type_cursor_point
+_type_Mesh_init_score  = typing.Union[None, typing.Callable[[_type_Text_init_lines, _type_Mesh_init_tile], typing.Union[int, None]]]
+_type_Mesh_init_scout  = typing.Union[None, typing.Callable[[_type_Mesh_init_spot], bool]]
+_type_Mesh_init_rigid  = bool
+_type_Mesh_init_create = typing.Union[None, typing.Callable[[_type_Mesh_init_spot], typing.Union[_type_Mesh_init_tile, None]]]
 
 
 class Mesh(Mutate):
@@ -461,7 +461,7 @@ class Mesh(Mutate):
         return self._search_line
     
     @property
-    def vision(self) -> dict[_type_Mesh_init_spot, _type_Mesh_init_spot]:
+    def vision(self) -> typing.Dict[_type_Mesh_init_spot, _type_Mesh_init_spot]:
 
         """
         A mapping of currently visible spots to the real ones they correspond to.
@@ -584,7 +584,7 @@ class Mesh(Mutate):
         return tile
     
     def insert(self, 
-               spot: _type_Mesh_init_spot) -> _type_Mesh_init_tile | None:
+               spot: _type_Mesh_init_spot) -> typing.Union[_type_Mesh_init_tile, None]:
         
         """
         Attempt to insert a tile.
@@ -615,7 +615,7 @@ class Mesh(Mutate):
         return tile
 
     def delete(self,
-               spot: _type_Mesh_init_spot) -> _type_Mesh_init_tile | None:
+               spot: _type_Mesh_init_spot) -> typing.Union[_type_Mesh_init_tile, None]:
 
         """
         Attempt to delete a tile
@@ -750,7 +750,7 @@ class Mesh(Mutate):
         self._search_execute(self._search_insert_act, runes)
 
     def search_insert(self, 
-                      runes: list[str]):
+                      runes: typing.List[str]):
 
         """
         Insert text to the search line, and filter or displace tiles accordingly.

@@ -143,7 +143,7 @@ def _parse(get):
     return Text(rune)
 
 
-_type_parse_return: typing.TypeAlias = Text | Escape | Control | Sequence
+_type_parse_return = typing.Union[Text, Escape, Control, Sequence]
 
 
 def parse(get: typing.Callable[[], str]) -> _type_parse_return:

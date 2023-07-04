@@ -71,7 +71,7 @@ def add(name: str):
             except KeyError:
                 pass
             else:
-                kwargs = defaults | kwargs
+                kwargs = {**defaults, **kwargs}
             return function(*args, **kwargs)
         return wrapper
 

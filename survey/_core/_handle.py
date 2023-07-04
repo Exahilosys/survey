@@ -16,7 +16,7 @@ class Terminate(Exception):
     """
 
 
-_type_Handle_start_invoke: typing.TypeAlias = typing.Callable[[str, _ansi._type_parse_return], None]
+_type_Handle_start_invoke = typing.Callable[[str, _ansi._type_parse_return], None]
 
     
 class Handle:

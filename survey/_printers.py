@@ -16,9 +16,9 @@ from . import _theme
 __all__ = ('text', 'info', 'done', 'fail')
 
 
-_type_text_sep: typing.TypeAlias = str
-_type_text_end: typing.TypeAlias = str
-_type_text_re : typing.TypeAlias = bool
+_type_text_sep = str
+_type_text_end = str
+_type_text_re  = bool
 
 
 def _text(*values, 
@@ -57,8 +57,8 @@ def _annotate(mark_color, mark, values, **kwargs):
     _text(mark, *values, **kwargs)
 
 
-_type_info_mark      : typing.TypeAlias = str
-_type_info_mark_color: typing.TypeAlias = str
+_type_info_mark       = str
+_type_info_mark_color = str
 
 
 @_theme.add('printers.info')
@@ -90,8 +90,8 @@ def _info(*values,
 info = _info
 
 
-_type_done_mark      : typing.TypeAlias = str
-_type_done_mark_color: typing.TypeAlias = str
+_type_done_mark       = str
+_type_done_mark_color = str
 
 
 @_theme.add('printers.done')
@@ -123,8 +123,8 @@ def _done(*values,
 done = _done
 
 
-_type_fail_mark      : typing.TypeAlias = str
-_type_fail_mark_color: typing.TypeAlias = str
+_type_fail_mark       = str
+_type_fail_mark_color = str
 
 
 @_theme.add('printers.fail')

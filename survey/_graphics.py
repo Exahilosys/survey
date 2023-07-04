@@ -42,7 +42,7 @@ class Graphic(abc.ABC):
     def __init__(self, 
                  inline   : bool = False, 
                  throttle : float = 0.1,
-                 epilogue : str | typing.Callable[[], str] | None = None):
+                 epilogue : typing.Union[str, typing.Callable[[], str], None] = None):
 
         self._inline = inline
 
@@ -76,7 +76,8 @@ class Graphic(abc.ABC):
 
     def _sketch(self, close):
 
-        if close and not (value := self._epilogue) is None:
+        value = self._epilogue
+        if close and not value is None:
             if callable(value):
                 value = value()
         else:
@@ -279,7 +280,7 @@ class SpinProgress(BaseProgress):
     @_theme.add('graphics.SpinProgress')
     def __init__(self, 
                  *args,
-                 phases: list[str] = ('.', 'o', 'O', '@', '*'),
+                 phases: typing.List[str] = ('.', 'o', 'O', '@', '*'),
                  prefix: str       = ' ',
                  suffix: str       = '',
                  **kwargs):
@@ -362,7 +363,7 @@ class LineProgress(BaseProgress):
                  total                 : int, 
                  *args,
                  width                 : int       = 50,
-                 phases                : list[str] = ('-',), 
+                 phases                : typing.List[str] = ('-',), 
                  empty                 : str       = ' ',
                  prefix_wall           : str       = '[', 
                  suffix_wall           : str       = ']',
@@ -415,18 +416,22 @@ class LineProgress(BaseProgress):
 
         size_limit = self._cursor.measure()[1]
         size_limit -= self._cursor.locate()[1]
-        
-        if not (size_given := self._width) is None:
+
+        size_given = self._width
+
+        if not size_given is None:
             size_limit = min(size_given, size_limit)
 
         size_ratio = min(self._total, self._cycle_actual) / self._total
 
         percentage = ''
-        if not (percentage_template := self._percentage_template) is None:
+        percentage_template = self._percentage_template
+        if not percentage is None:
             percentage_value = str(math.ceil(size_ratio * 100))
             percentage_zfill_count = self._percentage_zfill_count - len(percentage_value)
             percentage_zfill_value = self._percentage_zfill_value * percentage_zfill_count
-            if not (percentage_zfill_color := self._percentage_zfill_color) is None:
+            percentage_zfill_color = self._percentage_zfill_color
+            if not percentage_zfill_color is None:
                 percentage_zfill_value = _helpers.paint_text(percentage_zfill_color, percentage_zfill_value)
             percentage_value = percentage_zfill_value + percentage_value
             percentage = percentage_template.format(value = percentage_value)
@@ -446,7 +451,8 @@ class LineProgress(BaseProgress):
         add_size = full_size_limit - full_size
 
         throughput = ''
-        if not (throughput_template := self._throughput_template) is None:
+        throughput_template = self._throughput_template
+        if not throughput_template is None:
             try:
                 throughput_times, throughput_steps = zip(*self._throughput_deque)
                 throughput_period = max(throughput_times) - min(throughput_times)
@@ -458,7 +464,8 @@ class LineProgress(BaseProgress):
                 throughput_value = str(math.ceil(throughput_ratio * 100))
             throughput_zfill_count = self._throughput_zfill_count - len(throughput_value)
             throughput_zfill_value = self._throughput_zfill_value * throughput_zfill_count
-            if not (throughput_zfill_color := self._throughput_zfill_color) is None:
+            throughput_zfill_color = self._throughput_zfill_color
+            if not throughput_zfill_color is None:
                 throughput_zfill_value = _helpers.paint_text(throughput_zfill_color, throughput_zfill_value)
             throughput_value = throughput_zfill_value + throughput_value
             throughput = throughput_template.format(value = throughput_value)

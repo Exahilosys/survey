@@ -37,7 +37,7 @@ def _get_line_wrap_y(limit: int,
 
 
 def _get_line_wrap_y_sum(limit: int, 
-                         sizes: list[int]):
+                         sizes: typing.List[int]):
 
     """
     Get the amount of y-space needed to render a list of lines in a given x-space.
@@ -60,7 +60,7 @@ def _get_line_wrap_y_sum(limit: int,
 
 
 def _get_point_wrap(limit: int, 
-                    sizes: list[int], 
+                    sizes: typing.List[int], 
                     cur_y: int, 
                     cur_x: int):
 
@@ -89,8 +89,8 @@ class Memory:
         self.x = x
     
 
-_type_Render_draw_lines: typing.TypeAlias = list[list[str]]
-_type_Render_draw_point: typing.TypeAlias = list[int, int] | None
+_type_Render_draw_lines = typing.List[typing.List[str]]
+_type_Render_draw_point = typing.Union[typing.List[int], None]
 
 
 class Render:
@@ -229,7 +229,6 @@ class Render:
     def draw(self, 
              lines: _type_Render_draw_lines,
              point: _type_Render_draw_point = None,
-             /,
              *,
              clean: bool = True,
              learn: bool = True):
@@ -251,7 +250,9 @@ class Render:
 
     def _back(self):
 
-        if (memory := self._memory) is None:
+        memory = self._memory
+
+        if memory is None:
             return
         
         self._cursor.move(memory.y, memory.x)

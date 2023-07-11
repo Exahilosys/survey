@@ -134,6 +134,7 @@ class Widget:
         """
 
         result = self._result_c
+
         if result is self._mark_result_c:
             result = self._resolve()
 
@@ -759,15 +760,16 @@ class AutoSubmit(Input):
         @handle.add
         @_controls.get((_handle.EventType.leave, _core.Event.insert))
         def _control_insert_leave(info):
-            value = result = super(AutoSubmit, self)._resolve()
+            value = super(AutoSubmit, self)._resolve()
             if not transform is None:
-                value = transform(result)
+                value = transform(value)
             try:
                 evaluate(value)
             except Abort:
                 self._mutate.set_state(_state); raise
             if not validate(value):
                 return
+            self._result_c = value
             raise _core.Terminate()
         
         callback = _helpers.chain_functions(callback, handle.invoke)
@@ -812,18 +814,16 @@ class Inquire(AutoSubmit):
                  options  : _type_Inquire_init_options  = {'y': True, 'n': False}, 
                  transform: _type_Inquire_init_tranform = str.lower,
                  **kwargs):
-        
-        self._options = options
-
-        options = options.keys()
 
         if not transform is None:
-            options = tuple(map(transform, options))
+            options = dict(zip(map(transform, options), options.values()))
+
+        self._options = options
         
         def evaluate(result):
-            check = lambda option: option.startswith(result)
-            if any(map(check, options)):
-                return
+            for option in options:
+                if option.startswith(result):
+                    return
             raise Abort(None)
         
         def validate(result):
@@ -839,12 +839,12 @@ class Inquire(AutoSubmit):
 
     def _resolve(self):
 
-        field = super()._resolve()
+        result = super()._resolve()
 
-        value = self._options[field]
+        option = self._options[result]
 
-        return value
-
+        return option
+    
 
 def _focus_nil(spot):
 

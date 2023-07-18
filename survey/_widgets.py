@@ -78,9 +78,9 @@ class Widget:
         Used with ``(result)`` upon submission, forbidden by raising :exc:`.Abort`.
     """
 
-    _mark_result_c = object()
+    _product_mark = object()
 
-    __slots__ = ('_mutate', '_handle', '_visual', '_delegate', '_validate', '_escapable', '_result_c')
+    __slots__ = ('_mutate', '_handle', '_visual', '_delegate', '_validate', '_escapable', '_product')
 
     def __init_subclass__(cls, controls = (), **kwargs):
 
@@ -100,7 +100,7 @@ class Widget:
         
         self._delegate = delegate
         self._validate = validate
-        self._result_c = self._mark_result_c
+        self._product = self._product_mark
 
         self._mutate = mutate
 
@@ -123,6 +123,10 @@ class Widget:
 
         return self._mutate
     
+    def _prepare(self, value):
+
+        return value
+    
     def _resolve(self):
 
         raise NotImplemented()
@@ -133,12 +137,14 @@ class Widget:
         Get the resolved value.
         """
 
-        result = self._result_c
+        value = self._product
 
-        if result is self._mark_result_c:
-            result = self._resolve()
+        if value is self._product_mark:
+            value = self._resolve()
 
-        return result
+        value = self._prepare(value)
+
+        return value
     
     def _invoke_validate(self):
 
@@ -147,14 +153,14 @@ class Widget:
         if validate is None:
             return
 
-        result = self._result_c
+        value = self._product
 
-        if result is self._mark_result_c:
-            result = self._result_c = self._resolve()
+        if value is self._product_mark:
+            value = self._product = self._resolve()
 
-        validate(result)
+        validate(value)
         
-        self._result_c = self._mark_result_c
+        self._product = self._product_mark
 
     def _invoke(self, event, *args, **kwargs):
 
@@ -640,17 +646,17 @@ class Numeric(Input):
 
     def _resolve(self):
 
-        result = super()._resolve()
+        value = super()._resolve()
 
-        if result == '-':
-            result = '0'
+        if value == '-':
+            value = '0'
 
-        if result.endswith('.'):
-            result = f'{result}0'
+        if value.endswith('.'):
+            value = f'{value}0'
 
-        result = self._transform(self._transform_abort_message, result)
+        value = self._transform(self._transform_abort_message, value)
 
-        return result
+        return value
 
 
 _type_Conceal_init_rune  = str
@@ -746,7 +752,7 @@ class AutoSubmit(Input):
         def _control_submit_enter(info):
             if _helpers.check_lines(self._mutate.lines) or default is self._default_mark:
                 raise Abort(None)
-            self._result_c = default
+            self._product = default
             raise _core.Terminate()
 
         _state = NotImplemented
@@ -769,7 +775,7 @@ class AutoSubmit(Input):
                 self._mutate.set_state(_state); raise
             if not validate(value):
                 return
-            self._result_c = value
+            self._product = value
             raise _core.Terminate()
         
         callback = _helpers.chain_functions(callback, handle.invoke)
@@ -820,14 +826,14 @@ class Inquire(AutoSubmit):
 
         self._options = options
         
-        def evaluate(result):
+        def evaluate(value):
             for option in options:
-                if option.startswith(result):
+                if option.startswith(value):
                     return
             raise Abort(None)
         
-        def validate(result):
-            return result in options
+        def validate(value):
+            return value in options
         
         super().__init__(
             evaluate, 
@@ -837,15 +843,15 @@ class Inquire(AutoSubmit):
             **kwargs
         )
 
-    def _resolve(self):
+    def _prepare(self, value):
 
-        result = super()._resolve()
+        value = super()._prepare(value)
 
-        option = self._options[result]
+        value = self._options[value]
 
-        return option
+        return value
     
-
+    
 def _focus_nil(spot):
 
     return False
@@ -1714,9 +1720,9 @@ class DateTime(BaseList):
             value = tile.resolve()
             kwargs[name] = value
 
-        result = self._convert(kwargs)
+        value = self._convert(kwargs)
 
-        return result
+        return value
     
 
 _Form_tile_focus = lambda event: True

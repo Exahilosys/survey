@@ -2,6 +2,7 @@
 from . import _ansi as ansi
 
 from ._io     import IO
+from ._intel  import Intel
 from ._cursor import Cursor, ClearMode, EraseMode
 from ._source import Source, Event
 from ._handle import Handle, Terminate
@@ -18,6 +19,6 @@ from ._handle import _type_Handle_start_invoke
 
 __all__ = (
     'ansi', 
-    'IO', 'Cursor', 'ClearMode', 'EraseMode', 'Source', 'Event', 'Render', 'Screen', 'Handle', 'Terminate', 
+    'IO', 'Intel', 'Cursor', 'ClearMode', 'EraseMode', 'Source', 'Event', 'Render', 'Screen', 'Handle', 'Terminate', 
     'Console', 'SkipDraw'
 )

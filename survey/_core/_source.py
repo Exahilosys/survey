@@ -4,7 +4,7 @@ import threading
 
 from . import _helpers
 from . import _ansi
-from . import _io
+from . import _intel
 
 
 __all__ = ('Source', 'Event')
@@ -64,56 +64,20 @@ class Source:
 
     :param callback:
         Called with ``(name, info)`` upon receiving and translating.
-    :param io:
+    :param intel:
         Used for receiving from input.
     """
 
-    __slots__ = ('_callback', '_io', '_lock', '_buffer')
+    __slots__ = ('_callback', '_intel', '_lock')
 
     def __init__(self, 
                  callback: _type_Source_init_callback, 
-                 io: _io.IO):
+                 intel   : _intel.Intel):
 
         self._callback = callback
-        self._io = io
+        self._intel = intel
 
         self._lock = threading.RLock()
-
-        self._buffer = []
-
-    def _read(self):
-
-        if self._buffer:
-            return
-        
-        text = self._io.recv()
-
-        if text == '\x1b':
-            return
-
-        self._buffer.extend(text)
-        
-    def _get(self):
-
-        self._read()
-
-        try:
-            rune = self._buffer.pop(0)
-        except IndexError:
-            raise _EmptyRead()
-
-        return rune
-    
-    _empty = _ansi.Escape('')
-
-    def _next(self):
-
-        try:
-            code = _ansi.parse(self._get)
-        except _EmptyRead:
-            code = self._empty
-
-        return code
 
     _group = {
         EventType.control: {
@@ -170,11 +134,10 @@ class Source:
     @_helpers.ctxmethod(lambda self: self._lock)
     def _advance(self):
 
-        info = self._next()
+        info = self._intel.read()
 
         self._process(info)
 
-    _helpers.ctxmethod(lambda self: self._io)
     def _listen(self):
 
         while True:

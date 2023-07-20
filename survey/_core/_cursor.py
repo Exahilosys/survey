@@ -4,7 +4,7 @@ import threading
 
 from . import _helpers
 from . import _ansi
-from . import _io
+from . import _intel
 
 
 __all__ = ('ClearMode', 'EraseMode', 'Cursor')
@@ -54,22 +54,23 @@ class Cursor:
         Coordinates here are ``1``-offset indexes, meaning they start from 1. 
         The position of the cursor on the top-left-most of the screen is :code:`(1, 1)`.
         
-    :param io:
-        Used for sending ANSI sequences to output.
+    :parma intel:
+        Used for fetching parsed items from input and sending to output.
 
     .. code-block:: python
     
         io = IO(sys.stdin, sys.stdout)
-        cursor = Cursor(io)
+        intel = Intel(io)
+        cursor = Cursor(intel)
         location = cursor.locate()
     """
 
-    __slots__ = ('_lock', '_hidden', '_io')
+    __slots__ = ('_intel', '_hidden', '_lock')
 
     def __init__(self, 
-                 io: _io.IO):
+                 intel: _intel.Intel):
 
-        self._io = io
+        self._intel = intel
 
         self._hidden = _helpers.Atomic(self.hide, self.show)
 
@@ -89,14 +90,13 @@ class Cursor:
 
         return self._hidden
 
-    @_helpers.ctxmethod(lambda self: self._io)
     def _send(self, *args, escape = False, **kwargs):
 
         function = _ansi.get_escape if escape else _ansi.get_control
 
         value = function(*args, **kwargs)
 
-        self._io.send(value)
+        self._intel.send(value)
 
     def _up(self, size):
 
@@ -299,17 +299,15 @@ class Cursor:
         self._show()
 
     @_helpers.ctxmethod(lambda self: self._lock)
-    @_helpers.ctxmethod(lambda self: self._io)
     def _locate(self):
 
         self._send('n', '6')
-        
-        while True:
-            code = _ansi.parse(self._io.recv)
-            if not isinstance(code, _ansi.Sequence) and code.rune == 'R':
-                continue
-            break
 
+        def check(code):
+            return isinstance(code, _ansi.Sequence) and code.rune == 'R'
+        
+        code = self._intel.read(check = check)
+    
         point = tuple(map(int, code.args))
 
         return point

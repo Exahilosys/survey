@@ -9,7 +9,7 @@ from . import _helpers
 from . import _constants
 from . import _ansi
 from . import _cursor
-from . import _io
+from . import _intel
 
 
 __all__ = ('Render',)
@@ -103,14 +103,15 @@ class Render:
     
     :param cursor:
         Used for moving and clearing.
-    :param io:
+    :param intel:
         Used for sending to the output.
 
     .. code-block:: python
     
         io = IO(sys.stdin, sys.stdout)
-        cursor = Cursor(io)
-        render = Render(cursor, io)
+        intel = Intel(io)
+        cursor = Cursor(intel)
+        render = Render(cursor, intel)
         # draw "Hello\\nWorld" and place cursor between "r" and "l".
         render.draw([['H', 'e', 'l', 'l', 'o'], ['W', 'o', 'r', 'l', 'd']], [1, 3])
     """
@@ -119,26 +120,26 @@ class Render:
 
     _style_reset = _ansi.get_control('m', 0)
 
-    __slots__ = ('_io', '_cursor', '_memory', '_lock')
+    __slots__ = ('_intel', '_cursor', '_memory', '_lock')
 
     def __init__(self,
                  cursor: _cursor.Cursor, 
-                 io: _io.IO):
+                 intel: _intel.Intel):
 
-        self._io = io
+        self._intel = intel
         self._cursor = cursor
         self._memory = None
         
         self._lock = threading.Lock()
     
     @property
-    def io(self) -> _io.IO:
+    def intel(self) -> _intel.Intel:
 
         """
-        The io used for sending text.
+        The intel used for sending text.
         """
 
-        return self._io
+        return self._intel
     
     @property
     def cursor(self) -> _cursor.Cursor:
@@ -162,9 +163,9 @@ class Render:
         
         for index, line in enumerate(lines):
             if index:
-                self._io.send(_constants.linesep)
+                self._intel.send(_constants.linesep)
             text = ''.join(line)
-            self._io.send(text)
+            self._intel.send(text)
             if clean:
                 self._cursor.erase()
 
@@ -181,7 +182,6 @@ class Render:
         self._cursor.move(usr_y, usr_x)
 
     @_helpers.ctxmethod(lambda self: self._lock)
-    @_helpers.ctxmethod(lambda self: self._io)
     def _draw(self, learn, clean, lines, point):
 
         lines = tuple(map(tuple, lines))
@@ -189,10 +189,8 @@ class Render:
         cur_y, cur_x = self._cursor.locate()
         max_y, max_x = self._cursor.measure()
 
-        self._io.send(self._style_reset)
+        self._intel.send(self._style_reset)
 
-        # does not make sense not
-        # to clean each lines end
         self._send(True, lines)
 
         if clean:

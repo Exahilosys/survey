@@ -1,7 +1,7 @@
 import typing
 
 from . import _helpers
-from . import _io
+from . import _intel
 from . import _ansi
 from . import _source
 
@@ -25,17 +25,16 @@ class Handle:
     Encapsulates the invokation loop logic.
     """
 
-    __slots__ = ('_io',)
+    __slots__ = ('_intel',)
 
     def __init__(self, 
-                 io: _io.IO):
+                 intel: _intel.Intel):
 
-        self._io = io
+        self._intel = intel
 
-    @_helpers.ctxmethod(lambda self: self._io)
     def _start(self, invoke):
 
-        source = _source.Source(invoke, self._io)
+        source = _source.Source(invoke, self._intel)
 
         try:
             source.listen()

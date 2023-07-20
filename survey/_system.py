@@ -15,13 +15,16 @@ __all__ = ('io', 'cursor', 'render', 'handle', 'screen', 'console')
 _io = io = _core.IO(sys.stdin, sys.stdout)
 
 #:
-_handle = handle = _core.Handle(_io)
+_intel = intel = _core.Intel(_io)
 
 #:
-_cursor = cursor = _core.Cursor(_io)
+_handle = handle = _core.Handle(_intel)
 
 #:
-_render = render = _core.Render(_cursor, _io)
+_cursor = cursor = _core.Cursor(_intel)
+
+#:
+_render = render = _core.Render(_cursor, _intel)
 
 #:
 _screen = screen = _core.Screen(_render, _cursor)

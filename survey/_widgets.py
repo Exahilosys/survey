@@ -158,9 +158,10 @@ class Widget:
         if value is self._product_mark:
             value = self._product = self._resolve()
 
-        validate(value)
-        
-        self._product = self._product_mark
+        try:
+            validate(value)
+        finally:
+            self._product = self._product_mark
 
     def _invoke(self, event, *args, **kwargs):
 

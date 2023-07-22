@@ -146,8 +146,8 @@ def _get(multi_maybe: _type_get_multi_maybe,
     main_visual_point = [main_visual_point_index]
 
     main_funnel_leave_group = []
-    main_funnel_leave_entry = _funnels.text_max_dynamic(_system.cursor.measure)
-    main_funnel_leave_group.append(main_funnel_leave_entry)
+    # main_funnel_leave_entry = _funnels.text_max_dynamic(_system.cursor.measure)
+    # main_funnel_leave_group.append(main_funnel_leave_entry)
     main_funnel_leave = _helpers.chain_functions(*main_funnel_leave_group)
 
     main_visual = _visuals.Line.link(main_visual_tiles, main_visual_point, funnel_leave = main_funnel_leave)

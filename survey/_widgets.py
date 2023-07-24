@@ -25,7 +25,7 @@ from . import _searches
 from . import _theme
 
 
-__all__ = ('WidgetError', 'Widget', 'start', 
+__all__ = ('Abort', 'Escape', 'Widget', 'start', 
            'BaseText', 'Input', 'Numeric', 'Conceal', 'AutoSubmit', 'Inquire', 
            'BaseMesh', 'BaseList', 'Select', 'Basket', 'Count', 'DateTime',
            'Form')
@@ -38,7 +38,6 @@ class Abort(_helpers.InfoErrorMixin, Exception):
     """
 
     __slots__ = ()
-
 
 
 class Escape(Exception):

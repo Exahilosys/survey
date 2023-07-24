@@ -160,8 +160,9 @@ class Widget:
 
         try:
             validate(value)
-        finally:
+        except Abort:
             self._product = self._product_mark
+            raise
 
     def _invoke(self, event, *args, **kwargs):
 

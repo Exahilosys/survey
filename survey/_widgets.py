@@ -715,9 +715,9 @@ class AutoSubmit(Input):
     Resolves into a :class:`str`.
 
     :param evaluate:
-        Used with ``(result)`` before insertion, which can be prevented by raising :exc:`.Abort`.
+        Used with ``(result)`` before insertion, which can be prevented by raising :exc:`.Abort` (like :paramref:`.Widget.validate`).
     :param validate:
-        Used with ``(result)`` after to decide whether to submit.
+        Used with ``(result)`` after to decide whether to submit (should return :cls:`bool`).
     :param default:
         Used instead when attempting to submit without a value.
     :param transform:

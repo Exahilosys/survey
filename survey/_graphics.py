@@ -79,7 +79,7 @@ class Interface:
         self._thread = None
 
     @property
-    def tiles(self) -> typing.List[_visuals.Visual]:
+    def tiles(self) -> list[_visuals.Visual]:
         
         """
         The managed graphics.
@@ -344,7 +344,7 @@ class SpinProgress(Graphic):
 
 
 _type_MultiLineProgressControl_init_total               = typing.Union[int, float]
-_type_MultiLineProgressControl_init_runes               = typing.List[str]
+_type_MultiLineProgressControl_init_runes               = list[str]
 _type_MultiLineProgressControl_init_color               = typing.Union[str, None]
 _type_MultiLineProgressControl_init_value               = typing.Union[int, float]
 _type_MultiLineProgressControl_init_deque_limit_size    = typing.Union[int, None]
@@ -650,7 +650,7 @@ def _get_MultiLineProgress_suffix(progress, delimit = ' | '):
     return ' ' + delimit.join(infos)
 
 
-_type_MultiLineProgress_init_controls    = typing.List[MultiLineProgressControl]
+_type_MultiLineProgress_init_controls    = list[MultiLineProgressControl]
 _type_MultiLineProgress_init_width       = _type_MultiLineProgressControl_get_line_width
 _type_MultiLineProgress_init_empty       = str
 _type_MultiLineProgress_init_prefix      = _type_init_Graphic_prefix

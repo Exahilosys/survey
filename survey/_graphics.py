@@ -698,6 +698,8 @@ class MultiLineProgress(Graphic):
                         time.sleep(0.01)
     
     |theme| :code:`graphics.MultiLineProgress`
+
+    .. image:: /_static/images/graphics.multilineprogress-1.gif
     """
     
     __slots__ = ('_controls',)

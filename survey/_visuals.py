@@ -3,7 +3,7 @@
 Classes for transforming specific-structure data into a form that be 
 used by to print to the console while maintaining proper cursor position.
 
-Most accept data structured in similar ways to how it is used in :class`~.mutate.Mutate`\ s.
+Most accept data structured in similar ways to how it is used in :class`~.mutate.Mutate`\\s.
 """
 
 import typing
@@ -80,7 +80,7 @@ class Visual(abc.ABC):
         if enter and not self._funnel_enter is None:
             self._funnel_enter(*assets)
 
-        (lines, point) = self._format(*assets)
+        lines, point = self._format(*assets)
 
         if leave and not self._funnel_leave is None:
             self._funnel_leave(lines, point)
@@ -187,7 +187,7 @@ class Mesh(Visual):
         """
 
         def get(*args):
-            dyn_tiles = {spot: get(*args) for (spot, get) in tiles.items()}
+            dyn_tiles = {spot: get(*args) for spot, get in tiles.items()}
             dyn_point = copy.deepcopy(point)
             return (dyn_tiles, dyn_point)
         
@@ -197,7 +197,7 @@ class Mesh(Visual):
 
         spots = tiles.keys()
 
-        (main_y, main_x) = point
+        main_y, main_x = point
 
         done_lines = []
         memo_lines = []
@@ -207,9 +207,9 @@ class Mesh(Visual):
         fin_x = 0
 
         for spot in sorted(spots):
-            (spot_y, spot_x) = spot
-            (tile_lines, tile_point) = tiles[spot]
-            (tile_point_y, tile_point_x) = tile_point
+            spot_y, spot_x = spot
+            tile_lines, tile_point = tiles[spot]
+            tile_point_y, tile_point_x = tile_point
             if not spot_y == memo_y:
                 if spot_y <= main_y:
                     fin_y += len(memo_lines)
@@ -225,7 +225,7 @@ class Mesh(Visual):
                 else:
                     ext_x = len(memo_line)
                 fin_x = ext_x + tile_point_x
-            for (tile_line_index, tile_line) in enumerate(tile_lines):
+            for tile_line_index, tile_line in enumerate(tile_lines):
                 try:
                     memo_line = memo_lines[tile_line_index]
                 except IndexError:
@@ -303,7 +303,8 @@ class Line(Visual):
         fin_x = 0
 
         lines = [[]]
-        for (tile_index, (tile_lines, tile_point)) in enumerate(tiles):
+        for tile_index, tile in enumerate(tiles):
+            tile_lines, tile_point = tile
             if tile_index < tiles_index:
                 fin_y += len(tile_lines) - 1
             elif tile_index == tiles_index:

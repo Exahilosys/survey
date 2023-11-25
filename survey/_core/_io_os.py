@@ -80,7 +80,7 @@ class ModeIO(BaseIO):
 
     def _start(self):
 
-        (self._i_save, mode) = self._init()
+        self._i_save, mode = self._init()
 
         mode = self._wait(mode, True)
 

@@ -15,6 +15,7 @@ import itertools
 import collections
 import builtins
 import functools
+import copy
 
 from . import _helpers
 from . import _colors
@@ -24,14 +25,14 @@ __all__ = (
     'text_replace', 'JustType', 'text_min_horizontal', 'text_min_vertical', 'text_max_horizontal', 'text_max_vertical',
     'text_max_dynamic', 'text_bloat_horizontal', 'text_bloat_vertical', 'text_block', 'text_paint', 'mesh_delegate',
     'mesh_delimit', 'mesh_focal', 'mesh_light', 'mesh_point', 'mesh_max', 'mesh_min', 'mesh_grid_fill', 'mesh_grid', 
-    'mesh_head', 'mesh_flip'
+    'mesh_head', 'mesh_flip', 'line_delimit'
 )
 
 
 def _call_direct(function):
 
     def direct(*args, **kwargs):
-        (*args, lines, point) = args
+        *args, lines, point = args
         return function(*args, **kwargs)(lines, point)
     
     function.call = direct
@@ -95,7 +96,7 @@ def _text_min_horizontal(just, size, rune,
 
     max_line_size = builtins.max(map(len, lines)) if size is None else size
 
-    for (rol_y, rol_line) in enumerate(lines):
+    for rol_y, rol_line in enumerate(lines):
         padding_size = max_line_size - len(rol_line)
         if not padding_size > 0:
             continue
@@ -304,7 +305,7 @@ def _text_max_dynamic(get,
     
     sizes = get()
 
-    for (function, size) in zip(functions, sizes):
+    for function, size in zip(functions, sizes):
         function(size, lines, point)
 
 
@@ -326,7 +327,7 @@ def _text_bloat_horizontal(just, size, runes,
 
     push = builtins.max(map(len, lines))
 
-    for (index, rune) in enumerate(runes):
+    for index, rune in enumerate(runes):
         _text_min_horizontal(just, size + push + index, rune, lines, point)
 
 
@@ -366,7 +367,7 @@ def _text_bloat_vertical(just, size, runes,
 
     push = len(lines)
 
-    for (index, rune) in enumerate(runes):
+    for index, rune in enumerate(runes):
         _text_min_vertical(just, size + push + index, rune, lines, point)
 
 
@@ -478,7 +479,7 @@ def text_block(rune_top: str,
 
         '/----------------------\\'
         '|umps ov|er the lazy do|'
-        '\----------------------/'
+        '\\----------------------/'
 
     Use :code:`text_bloat_vertical(JustType.center, 2, ' ')` and :code:`text_bloat_horizontal(JustType.center, 2, ' ')` before this to avoid content overwrite.
     """
@@ -526,7 +527,7 @@ def text_paint(color: str):
 def _mesh_delegate(check, aware, function, 
                    tiles, point):
 
-    for (spot, tile) in tiles.items():
+    for spot, tile in tiles.items():
         if check and not check(spot, tile):
             continue
         args = [*tile]
@@ -572,18 +573,18 @@ def _mesh_delimit(axis, rune,
 
 @_call_direct
 def mesh_delimit(axis: int, 
-                 rune: str):
+                 text: str):
     
     """
     Insert text between tiles.
 
     :param axis:
         The axis considered for the operation.
-    :param rune:
+    :param text:
         The text to insert.
     """
 
-    return functools.partial(_mesh_delimit, axis, rune)
+    return functools.partial(_mesh_delimit, axis, text)
 
 
 def _mesh_focal(function,
@@ -647,7 +648,7 @@ def _mesh_point(focus_rune, evade_rune, tiles, point):
         rune = runes[current]
         size = len(rune)
         fill = size * ' '
-        for (index, line) in enumerate(lines):
+        for index, line in enumerate(lines):
             text = fill if index else rune
             line[0:0] = text
         point[1] += size
@@ -764,7 +765,7 @@ def mesh_min(axis: int,
              fill: typing.Callable[[typing.Tuple[int, int]], typing.List[typing.List[str]]] = lambda spot: [[]]):
     
     """
-    Ensure there is most of a certain amount of tiles along an certain axis, aligned accordingly by ``fill``\ing with new tiles.
+    Ensure there is most of a certain amount of tiles along an certain axis, aligned accordingly by ``fill``\\ing with new tiles.
 
     :param axis:
         The axis considered for the operation.
@@ -791,23 +792,27 @@ def _mesh_grid_fill(tile_just_vertical, tile_rune_vertical,
     sizes_vertical = collections.defaultdict(int)
     sizes_horizontal = collections.defaultdict(int)
 
-    for ((cur_y, cur_x), (lines, point)) in tiles.items():
+    for cur_point, cur_tile in tiles.items():
+        cur_y, cur_x = cur_point
+        cur_tile_lines, cur_tile_point = cur_tile
         col_x_group[cur_y].append(cur_x)
         col_y_group[cur_x].append(cur_y)
-        size_vertical = len(lines)
+        size_vertical = len(cur_tile_lines)
         sizes_vertical[cur_y] = builtins.max(sizes_vertical[cur_y], size_vertical, tile_min_vertical)
-        size_horizontal = builtins.max(map(len, lines))
+        size_horizontal = builtins.max(map(len, cur_tile_lines))
         sizes_horizontal[cur_x] = builtins.max(sizes_horizontal[cur_x], size_horizontal, tile_min_horizontal)
 
-    bounds_x = {cur_y: (builtins.min(col_x), builtins.max(col_x)) for (cur_y, col_x) in col_x_group.items()}
-    bounds_y = {cur_x: (builtins.min(col_y), builtins.max(col_y)) for (cur_x, col_y) in col_y_group.items()}
+    bounds_x = {cur_y: (builtins.min(col_x), builtins.max(col_x)) for cur_y, col_x in col_x_group.items()}
+    bounds_y = {cur_x: (builtins.min(col_y), builtins.max(col_y)) for cur_x, col_y in col_y_group.items()}
 
     spots = set()
-    for (cur_y, (min_x, max_x)) in bounds_x.items():
+    for cur_y, cur_bounds in bounds_x.items():
+        min_x, max_x = cur_bounds
         for may_x in range(min_x, max_x + 1):
             spot = (cur_y, may_x)
             spots.add(spot)
-    for (cur_x, (min_y, max_y)) in bounds_y.items():
+    for cur_x, cur_bounds in bounds_y.items():
+        min_y, max_y = cur_bounds
         for may_y in range(max_y, min_y, - 1):
             spot = (may_y, cur_x)
             spots.add(spot)
@@ -881,7 +886,7 @@ def mesh_grid_fill(tile_just_vertical  : JustType = JustType.start,
 
 def _mesh_grid_get_text_block_runes(get, spots, spot):
 
-    (cur_y, cur_x) = spot
+    cur_y, cur_x = spot
 
     got_current      = (cur_y    , cur_x    ) in spots
     got_top          = (cur_y + 1, cur_x    ) in spots
@@ -954,15 +959,15 @@ def _mesh_grid(runes, runes_color, tiles, point, **mesh_grid_fill_kwargs):
     all_x = set(map(operator.itemgetter(1), tiles))
     max_x = builtins.max(all_x)
     
-    for (spot, tile) in tiles.items():
+    for spot, tile in tiles.items():
         text_block_runes = tuple(_mesh_grid_get_text_block_runes(get_rune, spots, spot))
         if spot[0] > min_y:
             _text_bloat_vertical(JustType.end, 1, ' ', *tile)
         _text_bloat_horizontal(JustType.end, 1, ' ', *tile)
         _text_block(*text_block_runes, None, None, None, *tile)
 
-    for (spot, tile) in tuple(tiles.items()):
-        (cur_y, cur_x) = spot
+    for spot, tile in tuple(tiles.items()):
+        cur_y, cur_x = spot
         if cur_y == min_y and cur_x == max_x:
             old_spot = (cur_y + 1, cur_x - 1)
             old_tile = tiles[old_spot]
@@ -976,7 +981,7 @@ def _mesh_grid(runes, runes_color, tiles, point, **mesh_grid_fill_kwargs):
         elif cur_x == max_x:
             old_spot = (cur_y, cur_x - 1)
             old_tile = tiles[old_spot]
-            for (old_line, new_line) in zip(old_tile[0], tile[0]):
+            for old_line, new_line in zip(old_tile[0], tile[0]):
                 old_line.append(new_line[0])
         else:
             continue
@@ -1049,7 +1054,7 @@ def _mesh_head(axis, just, skip, min, get,
     else:
         raise ValueError(f'invalid just: {just}')
 
-    for (cur_i, cur_a) in enumerate(range_a):
+    for cur_i, cur_a in enumerate(range_a):
         if cur_i < skip:
             continue
         lines = get(cur_a)
@@ -1121,3 +1126,29 @@ def mesh_flip(axis: int):
     """
     
     return functools.partial(_mesh_flip, axis)
+
+
+def _line_delimit(text,
+                  tiles, point):
+    
+    main_lines = _helpers.split_lines(text)
+
+    for index in range(1, len(tiles) * 2 - 1, 2):
+        main_lines_copy = copy.deepcopy(main_lines)
+        tiles.insert(index, (main_lines_copy, [0, 0]))
+        if point[0] > index:
+            continue
+        point[0] += 1
+
+
+@_call_direct
+def line_delimit(text: str):
+
+    """
+    Insert text between tiles.
+
+    :param text:
+        The text to insert.
+    """
+    
+    return functools.partial(_line_delimit, text)

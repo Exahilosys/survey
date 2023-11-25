@@ -1,6 +1,6 @@
 
 """
-Functions that use :class:`~widget.Widget`\ s within a :class:`.stage.get` 
+Functions that use :class:`~widget.Widget`\\s within a :class:`.stage.get` 
 visual and respond with the formated result, before returning it upon submission.
 """
 
@@ -244,7 +244,7 @@ def _inquire(*args,
     
     options = _helpers.get_function_arg_safe(_widgets.Inquire, 'options', widget_kwargs)
     default_value = _helpers.get_function_arg_safe(_widgets.Inquire, 'default', widget_kwargs)
-    default_option = next((option for (option, value) in options.items() if value == default_value), default_value)
+    default_option = next((option for option, value in options.items() if value == default_value), default_value)
 
     widget = _widgets.Inquire(**widget_kwargs)
 
@@ -276,7 +276,12 @@ def _select_hint_gen_instructions(widget):
     if not widget.mutate._search_score is None:
         yield 'filter: type'
 
-    yield 'move: ↑↓'
+    if widget.axis:
+        move = '←→'
+    else:
+        move = '↑↓'
+
+    yield 'move: {0}'.format(move)
 
 
 def _select_hint(widget, name, info):
@@ -370,10 +375,19 @@ def _basket_hint_gen_instructions(widget):
     if not widget.mutate._search_score is None:
         yield 'filter: type'
 
-    yield 'move: ↑↓'
+    if widget.axis:
+        move = '←→'
+        pick = '↑'
+        unpick = '↓'
+    else:
+        move = '↑↓'
+        pick = '→'
+        unpick = '←'
 
-    yield 'pick: → all: →→'
-    yield 'unpick: ← all: ←←'
+    yield 'move: {0}'.format(move)
+
+    yield 'pick: {0} all: {0}{0}'.format(pick)
+    yield 'unpick: {0} all: {0}{0}'.format(unpick)
 
 
 def _basket_hint(widget, name, info):
@@ -390,8 +404,6 @@ def _basket_reply(widget,
                   indexes, 
                   color = _colors.basic('cyan'), 
                   delimiter = ', '):
-    
-    size = len(widget.mutate.tiles)
 
     values = []
     for index in indexes:
@@ -439,7 +451,7 @@ def _basket(*args,
             index = spot[0]
             name = names[index]
             return not 'C' in name
-        index = survey.routines.basket('Favorite names? ',  options = names,  scout = scout,  evade_mark = '__',  focus_color = survey.colors.basic('magenta'), positive_mark = 'O ', negative_mark = 'X ',)
+        index = survey.routines.basket('Favorite names? ', options = names, scout = scout,  evade_mark = '__', focus_color = survey.colors.basic('magenta'), positive_mark = 'O ', negative_mark = 'X ')
         print(f'Answered {index}.')
     """
 

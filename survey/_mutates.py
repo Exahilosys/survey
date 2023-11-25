@@ -98,7 +98,7 @@ class Cursor(Mutate):
     
     def _move(self, instructions):
 
-        for (axis, coordinate) in instructions:
+        for axis, coordinate in instructions:
             self._point[axis] = coordinate
 
     def move(self, 
@@ -255,7 +255,7 @@ class Text(Mutate):
         if not min_i <= new_i <= max_i:
             raise Error('insufficient_x_space', size = size)
 
-        (new_y, new_x) = _helpers.text_index_to_point(cur_lines, new_i)
+        new_y, new_x = _helpers.text_index_to_point(cur_lines, new_i)
 
         instructions = ((0, new_y), (1, new_x))
 
@@ -290,7 +290,7 @@ class Text(Mutate):
         if not new_i <= max_i:
             raise Error('insufficient_x_space', size = size)
 
-        (new_y, new_x) = _helpers.text_index_to_point(cur_lines, new_i)
+        new_y, new_x = _helpers.text_index_to_point(cur_lines, new_i)
 
         if not cur_y == new_y:
             psh_y = cur_y + 1
@@ -342,15 +342,15 @@ class Text(Mutate):
         self._newline()
 
 
-_type_Mesh_init_clean  = typing.Union[None, int]
+_type_Mesh_init_clean  = typing.Union[int, None]
 _type_Mesh_init_spot   = typing.Tuple[int, int]
 _type_Mesh_init_tile   = typing.Any
 _type_Mesh_init_tiles  = typing.Dict[_type_Mesh_init_spot, _type_Mesh_init_tile]
 _type_Mesh_init_point  = _type_cursor_point
-_type_Mesh_init_score  = typing.Union[None, typing.Callable[[_type_Text_init_lines, _type_Mesh_init_tile], typing.Union[int, None]]]
-_type_Mesh_init_scout  = typing.Union[None, typing.Callable[[_type_Mesh_init_spot], bool]]
+_type_Mesh_init_score  = typing.Union[typing.Callable[[_type_Text_init_lines, _type_Mesh_init_tile], typing.Union[int, None]], None]
+_type_Mesh_init_scout  = typing.Union[typing.Callable[[_type_Mesh_init_spot], bool], None]
 _type_Mesh_init_rigid  = bool
-_type_Mesh_init_create = typing.Union[None, typing.Callable[[_type_Mesh_init_spot], typing.Union[_type_Mesh_init_tile, None]]]
+_type_Mesh_init_create = typing.Union[typing.Callable[[_type_Mesh_init_spot], typing.Union[_type_Mesh_init_tile, None]], None]
 
 
 class Mesh(Mutate):
@@ -677,7 +677,7 @@ class Mesh(Mutate):
             self._search_point_cache = copy.copy(self._point)
 
         assets = []
-        for (spot, tile) in self._tiles.items():
+        for spot, tile in self._tiles.items():
             score = self._search_score(argument, tile)
             if score is None:
                 continue
@@ -688,7 +688,7 @@ class Mesh(Mutate):
         
         assets = sorted(assets, reverse = True)
         
-        (scores, old_spots) = zip(*assets)
+        scores, old_spots = zip(*assets)
 
         cur_spots = self._vision.values()
 

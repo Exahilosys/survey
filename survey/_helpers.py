@@ -8,6 +8,7 @@ import collections
 import inspect
 import copy
 import contextlib
+import statistics
 
 from . import _constants
 
@@ -75,7 +76,7 @@ def get_point_neighbors(origin, radius):
 
     steps = range(- radius, radius + 1)
 
-    for (i, j) in itertools.product(steps, steps):
+    for i, j in itertools.product(steps, steps):
         if not radius in map(abs, (i, j)):
             continue
         yield (origin[0] + i, origin[1] + j)
@@ -156,7 +157,7 @@ class SGR:
 
         chunks = cls.split(value)
 
-        for (index, chunk) in enumerate(chunks):
+        for index, chunk in enumerate(chunks):
             if index % 2:
                 continue
             yield chunk
@@ -173,7 +174,7 @@ class SGR:
 
         chunks = cls.split(value)
 
-        for (index, chunk) in enumerate(chunks):
+        for index, chunk in enumerate(chunks):
             if index % 2:
                 continue
             chunks[index] = function(chunk)
@@ -204,7 +205,7 @@ def split_line(value):
 
     buffer = list(chunks.pop(0))
 
-    for (index, chunk) in enumerate(chunks):
+    for index, chunk in enumerate(chunks):
         if not index % 2:
             continue
         if chunk:
@@ -274,7 +275,7 @@ class IdentifiableSGR(str):
     
     def describe(self):
 
-        parts = ((name, value) for (name, value) in self._names.items() if value)
+        parts = ((name, value) for name, value in self._names.items() if value)
 
         description = ' '.join(map('{0[0]}:{0[1]}'.format, parts))
 
@@ -330,7 +331,7 @@ def paint_text(color, value, *args, **kwargs):
 
 def paint_line(color, line, *args, **kwargs):
 
-    for (index, rune) in enumerate(line):
+    for index, rune in enumerate(line):
         line[index] = paint_rune(color, rune, *args, **kwargs)
 
 
@@ -371,8 +372,9 @@ def squeeze_spots(axis, spots, dimensions = None, start = 0):
 
     all_a = range(0, len(buckets))
 
-    for (new_a, (cur_a, all_o)) in zip(all_a, buckets.items()):
-        for (new_o, cur_o) in enumerate(all_o, start = start):
+    for new_a, cur_info in zip(all_a, buckets.items()):
+        cur_a, all_o = cur_info
+        for new_o, cur_o in enumerate(all_o, start = start):
             cur_spot = [cur_o] * 2
             cur_spot[axis] = cur_a
             new_spot = [new_o] * 2
@@ -418,7 +420,7 @@ def get_function_parameters(function):
     for signature in signatures:
         parameters.update(signature.parameters)
 
-    parameters = {name: parameter for (name, parameter) in parameters.items() if not parameter.kind in ignore_kinds}
+    parameters = {name: parameter for name, parameter in parameters.items() if not parameter.kind in ignore_kinds}
 
     return parameters
 
@@ -491,4 +493,30 @@ def asset_value(value):
     return (lines, point)
 
 
+def get_or_call(value, *args, **kwargs):
+    
+    return value(*args, **kwargs) if callable(value) else value
+
+
 auto = type('auto', (), {'__slots__': (), '__repr__': lambda self: self.__class__.__name__})()
+
+
+def format_seconds(value, delimit = ':', fill = '0', depth = None):
+
+    depth = max(0, depth - 1)
+
+    dividers = (60, 60, 24)
+    segments = []
+
+    value = round(value)
+
+    for divider_index, divider in enumerate(dividers):
+        top, sub = divmod(value, divider)
+        sub = str(sub)
+        sub = fill * (len(str(divider)) - len(sub)) + sub
+        segments.append(sub)
+        if not top and (depth is None or not divider_index < depth):
+            break
+        value = top
+
+    return delimit.join(reversed(segments))

@@ -14,7 +14,7 @@ _fuzzy_mark = object()
 
 def fuzzy(argument, tile, get = lambda tile: tile.sketch(False, False)):
 
-    (lines, point) = get(tile)
+    lines, point = get(tile)
 
     cur_line = itertools.chain.from_iterable(lines)
     cur_line = map(str.lower, cur_line)
@@ -24,7 +24,7 @@ def fuzzy(argument, tile, get = lambda tile: tile.sketch(False, False)):
 
     score = 0
     density = 0
-    for (may_index, may_rune) in enumerate(may_line):
+    for may_index, may_rune in enumerate(may_line):
         try:
             cur_index = cur_line.index(may_rune)
         except ValueError:

@@ -1,29 +1,18 @@
 
 """
-Combinations of :class:`~.mutates.Mutate`\ s, :class:`~.visuals.Visual`\ s and 
+Combinations of :class:`~.mutates.Mutate`\\s, :class:`~.visuals.Visual`\\s and 
 :class:`~.handle.Handle` to create interactive units that can be resolved into expected values. 
 """
 
-import typing
 import contextvars
-import itertools
-import functools
-import math
 import datetime
+import functools
+import itertools
+import math
+import typing
 
-from . import _core
-from . import _helpers
-from . import _system
-from . import _colors
-from . import _mutates
-from . import _visuals
-from . import _controls
-from . import _handle
-from . import _stage
-from . import _funnels
-from . import _searches
-from . import _theme
-
+from . import (_colors, _controls, _core, _funnels, _handle, _helpers,
+               _mutates, _searches, _stage, _system, _theme, _visuals)
 
 __all__ = ('Abort', 'Escape', 'Widget', 'start', 
            'BaseText', 'Input', 'Numeric', 'Conceal', 'AutoSubmit', 'Inquire', 
@@ -126,9 +115,19 @@ class Widget:
 
         return value
     
-    def _resolve(self):
+    def _produce(self):
 
         raise NotImplemented()
+    
+    def _resolve(self):
+
+        value = self._product
+
+        if value is self._product_mark:
+            value = self._produce()
+            value = self._prepare(value)
+
+        return value
     
     def resolve(self):
 
@@ -136,14 +135,7 @@ class Widget:
         Get the resolved value.
         """
 
-        value = self._product
-
-        if value is self._product_mark:
-            value = self._resolve()
-
-        value = self._prepare(value)
-
-        return value
+        return self._resolve()
     
     def _invoke_validate(self):
 
@@ -155,7 +147,7 @@ class Widget:
         value = self._product
 
         if value is self._product_mark:
-            value = self._product = self._resolve()
+            value = self._product = self._produce()
 
         try:
             validate(value)
@@ -293,15 +285,15 @@ _start_warn_reset_lines = [[]]
 _type_start_multi_pre  = _stage._type_get_multi_maybe
 _type_start_multi_aft  = bool
 _type_start_widget     = Widget
-_type_start_show       = typing.Union[None, str]
-_type_start_mark       = typing.Union[None, str]
+_type_start_show       = typing.Union[str, None]
+_type_start_mark       = typing.Union[str, None]
 _type_start_mark_color = str
-_type_start_info       = _type_start_get_actor_dichotomic_value
+_type_start_info       = typing.Union[_type_start_get_actor_dichotomic_value, None]
 _type_start_info_parse = _type_start_get_actor_dichotomic_parse
-_type_start_hint       = _type_start_get_actor_dichotomic_value
+_type_start_hint       = typing.Union[_type_start_get_actor_dichotomic_value, None]
 _type_start_hint_parse = _type_start_get_actor_dichotomic_parse
 _type_start_site       = _stage._type_get_site
-_type_start_reply      = typing.Union[None, typing.Callable[[Widget, typing.Any], str]]
+_type_start_reply      = typing.Union[typing.Callable[[Widget, typing.Any], str], None]
 
 
 def _start(multi_pre : _type_start_multi_pre, 
@@ -310,9 +302,9 @@ def _start(multi_pre : _type_start_multi_pre,
            show      : _type_start_show       = None,
            mark      : _type_start_mark       = '? ',
            mark_color: _type_start_mark_color = _colors.basic('yellow'),
-           info      : _type_start_info       = '',
+           info      : _type_start_info       = None,
            info_parse: _type_start_info_parse = True,
-           hint      : _type_start_hint       = '', 
+           hint      : _type_start_hint       = None, 
            hint_parse: _type_start_hint_parse = True,
            site      : _type_start_site       = 'body',
            reply     : _type_start_reply      = None):
@@ -353,6 +345,12 @@ def _start(multi_pre : _type_start_multi_pre,
             show = mark + show
         show_get = _start_get_actor_static(True, show)
         _system.screen.print(show_get, False, learn = False)
+
+    if info is None:
+        info = ''
+
+    if hint is None:
+        hint = ''
 
     info_get, info_update = _start_get_actor_dichotomic(info_parse, info)
     hint_get, hint_update = _start_get_actor_dichotomic(hint_parse, hint)
@@ -545,13 +543,13 @@ class Input(BaseText):
 
         lines = _helpers.split_lines(value)
 
-        (y, x) = _helpers.text_index_to_point(lines, index)
+        y, x = _helpers.text_index_to_point(lines, index)
 
         point = [y, x]
 
         super().__init__(lines, point, *args, **kwargs)
 
-    def _resolve(self):
+    def _produce(self):
 
         value = _helpers.join_lines(self._mutate.lines)
 
@@ -645,9 +643,9 @@ class Numeric(Input):
             **kwargs
         )
 
-    def _resolve(self):
+    def _produce(self):
 
-        value = super()._resolve()
+        value = super()._produce()
 
         if value == '-':
             value = '0'
@@ -661,7 +659,7 @@ class Numeric(Input):
 
 
 _type_Conceal_init_rune  = str
-_type_Conceal_init_color = typing.Union[None, int]
+_type_Conceal_init_color = typing.Union[int, None]
 
 
 class Conceal(Input):
@@ -706,7 +704,7 @@ class Conceal(Input):
 _type_AutoSubmit_init_evaluate  = typing.Callable[[str], None]
 _type_AutoSubmit_init_validate  = typing.Callable[[str], bool]
 _type_AutoSubmit_init_default   = typing.Any
-_type_AutoSubmit_init_transform = typing.Union[None, typing.Callable[[str], str]]
+_type_AutoSubmit_init_transform = typing.Union[typing.Callable[[str], str], None]
 
 
 class AutoSubmit(Input):
@@ -767,7 +765,7 @@ class AutoSubmit(Input):
         @handle.add
         @_controls.get((_handle.EventType.leave, _core.Event.insert))
         def _control_insert_leave(info):
-            value = super(AutoSubmit, self)._resolve()
+            value = super(AutoSubmit, self)._produce()
             if not transform is None:
                 value = transform(value)
             try:
@@ -973,7 +971,7 @@ class BaseMesh(Widget, controls = _BaseMesh_controls):
 
         def visual_get(*args):
             tiles = {}
-            for (vis_spot, cur_spot) in mutate.vision.items():
+            for vis_spot, cur_spot in mutate.vision.items():
                 try:
                     tile = mutate.tiles[cur_spot]
                 except KeyError:
@@ -1041,13 +1039,14 @@ class BaseMesh(Widget, controls = _BaseMesh_controls):
 
 _type_BaseList_init_tiles       = typing.Union[typing.List[Widget], _type_BaseMesh_init_tiles]
 _type_BaseList_init_axis        = int
+_type_BaseList_init_delimit     = str
 _type_BaseList_init_index       = int
-_type_BaseList_init_label       = typing.Union[None, typing.Callable[[int], str]]
-_type_BaseList_init_view_max    = typing.Union[None, int]
-_type_BaseList_init_focus_color = typing.Union[None, str]
-_type_BaseList_init_focus_mark  = typing.Union[None, str]
-_type_BaseList_init_evade_color = typing.Union[None, str]
-_type_BaseList_init_evade_mark  = typing.Union[None, str]
+_type_BaseList_init_label       = typing.Union[typing.Callable[[int], str], None]
+_type_BaseList_init_view_max    = typing.Union[int, None]
+_type_BaseList_init_focus_color = typing.Union[str, None]
+_type_BaseList_init_focus_mark  = typing.Union[str, None]
+_type_BaseList_init_evade_color = typing.Union[str, None]
+_type_BaseList_init_evade_mark  = typing.Union[str, None]
 _type_BaseList_init_fill        = bool
 
 
@@ -1069,7 +1068,7 @@ class BaseList(BaseMesh, controls = _BaseList_controls):
     :param tiles:
         Same as :paramref:`.BaseMesh.tiles`, but it can be any iterable.
     :param index:
-        Used as the :paramref:`.axis`\th element of :paramref:`.BaseMesh.point`.
+        Used as the :paramref:`.axis`\\th element of :paramref:`.BaseMesh.point`.
     :param label:   
         Used as ``(index, tile)`` and returns a label to place on the right. 
     :param view_max:
@@ -1084,6 +1083,8 @@ class BaseList(BaseMesh, controls = _BaseList_controls):
         The rune to prepend to the non-current tiles.
     :param fill:
         Whether to fill empty room.
+    :param delimit:
+        The rune inserted between tiles.
 
     Arguments directly passed to super-class:
     
@@ -1091,7 +1092,7 @@ class BaseList(BaseMesh, controls = _BaseList_controls):
         - :paramref:`~.BaseMesh.point` - Created using :paramref:`.index`.
 
     .. warning::
-        For the sake of matching each spot's index to it's ``axis``\ -th value, vertical movement and vision are
+        For the sake of matching each spot's index to it's ``axis``\\-th value, vertical movement and vision are
         adjusted so that indexes increment downward instead of upward (which is how :class:`.BaseMesh` behaves normally).
     """
         
@@ -1109,6 +1110,7 @@ class BaseList(BaseMesh, controls = _BaseList_controls):
                  evade_color: _type_BaseList_init_evade_color = None,
                  evade_mark : _type_BaseList_init_evade_mark  = '  ',
                  fill       : _type_BaseList_init_fill        = True,
+                 delimit    : _type_BaseList_init_delimit     = None,
                  **kwargs):
         
         self._axis = axis
@@ -1119,7 +1121,7 @@ class BaseList(BaseMesh, controls = _BaseList_controls):
             tiles = ()
         
         if not isinstance(tiles, dict):
-            tiles = {_get_mesh_spot(axis, index): tile for (index, tile) in enumerate(tiles)}
+            tiles = {_get_mesh_spot(axis, index): tile for index, tile in enumerate(tiles)}
         
         point = _get_mesh_point(axis, index)
 
@@ -1137,6 +1139,10 @@ class BaseList(BaseMesh, controls = _BaseList_controls):
             funnel_enter_entry = _funnels.mesh_max(axis, view_max)
             funnel_enter_group.append(funnel_enter_entry)
 
+        if not delimit is None:
+            funnel_enter_entry = _funnels.mesh_delimit(axis, delimit)
+            funnel_enter_group.append(funnel_enter_entry)
+
         funnel_enter_entry = _funnels.mesh_light(focus_color, evade_color)
         funnel_enter_group.append(funnel_enter_entry)
 
@@ -1146,7 +1152,7 @@ class BaseList(BaseMesh, controls = _BaseList_controls):
         if evade_mark is None:
             evade_mark = ''
 
-        if axis == 0:
+        if not axis:
             funnel_enter_entry = _funnels.mesh_point(focus_mark, evade_mark)
             funnel_enter_group.append(funnel_enter_entry)
 
@@ -1179,7 +1185,7 @@ class BaseList(BaseMesh, controls = _BaseList_controls):
 
         return self._axis
 
-    def _resolve(self):
+    def _produce(self):
 
         index = self._mutate.cur_spot[self._axis]
 
@@ -1187,7 +1193,7 @@ class BaseList(BaseMesh, controls = _BaseList_controls):
 
 
 _type_Select_init_options = typing.List[str]
-_type_Select_init_create  = typing.Union[None, typing.Callable[[_mutates._type_Mesh_init_spot], str]]
+_type_Select_init_create  = typing.Union[typing.Callable[[_mutates._type_Mesh_init_spot], str], None]
 _type_Select_init_Option  = Input
 
 
@@ -1208,6 +1214,7 @@ class Select(BaseList):
         - :paramref:`~.BaseList.tiles` - Created using :paramref:`.options`.
         - :paramref:`~.BaseList.create` - Created using :paramref:`.create`.
         - :paramref:`~.BaseList.focus` - Set to a :class:`~typing.Callable` that delegates no events.
+        - :paramref:`~.BaseList.delimit` - Defaults to :code:`' '` when :paramref:`.BaseList.axis` is set to :code:`1`.
 
     Arguments used for :paramref:`.Option`:
 
@@ -1225,6 +1232,13 @@ class Select(BaseList):
                  create : _type_Select_init_create  = None,
                  Option : _type_Select_init_Option  = Input,
                  **kwargs):
+        
+        super_cls = self.__class__.__mro__[1]
+        
+        axis = _helpers.get_function_arg_safe(super_cls, 'axis', kwargs)
+
+        if axis:
+            kwargs.setdefault('delimit', ' ')
         
         def get_tile(value):
             option = Option(
@@ -1262,11 +1276,11 @@ _type_Basket_init_Option        = Input
 _type_Basket_init_Stamp         = Select
 
 
-_Basket_focus_events = {
-    _core.Event.arrow_left, _core.Event.arrow_right
+_Basket_directional_events = {
+    0: (_core.Event.arrow_left, _core.Event.arrow_right),
+    1: (_core.Event.arrow_down, _core.Event.arrow_up)
 }
 
-_Basket_focus = lambda event: event in _Basket_focus_events
 _Basket_search_get = lambda tile: tile.mutate.tiles[(0, 1)].sketch()
 
 
@@ -1291,7 +1305,8 @@ class Basket(BaseList):
     Arguments directly passed to super-class:
     
         - :paramref:`~.BaseList.tiles` - Created using :paramref:`.options`.
-        - :paramref:`~.BaseList.focus` - Set to a :class:`~typing.Callable` that delegates :attr:`~.Event.arrow_left` and :attr:`~.Event.arrow_right`.
+        - :paramref:`~.BaseList.focus` - Set to a :class:`~typing.Callable` that delegates arrow events based on axis.
+        - :paramref:`~.BaseList.delimit` - Defaults to :code:`' '` when :paramref:`.BaseList.axis` is set to :code:`1`
 
     Arguments used for :paramref:`.Option`:
 
@@ -1299,7 +1314,7 @@ class Basket(BaseList):
 
     Arguments used for :paramref:`.Stamp`:
 
-        - :paramref:`~.Select.axis` - Set to :code:`1`.
+        - :paramref:`~.Select.axis` - Set to to the opposite of :paramref:`.BaseList.axis`.
         - :paramref:`~.Select.options` - Set to a :class:`tuple` of :paramref:`.negative_mark` and :paramref:`.positive_mark`
         - :paramref:`~.BaseList.index` - Set to either :code:`0` or :code:`1` depending on whether the option's index is in :paramref:`.active`.
         - :paramref:`~.BaseList.view_max` - Set to :code:`1`.
@@ -1314,13 +1329,19 @@ class Basket(BaseList):
                  *args,
                  options      : _type_Basket_init_options       = _helpers.auto, 
                  active       : _type_Basket_init_active        = _helpers.auto,
-                 positive_mark: _type_Basket_init_positive_mark = '[X] ', 
-                 negative_mark: _type_Basket_init_negative_mark = '[ ] ',
+                 positive_mark: _type_Basket_init_positive_mark = '[X]', 
+                 negative_mark: _type_Basket_init_negative_mark = '[ ]',
                  Option       : _type_Basket_init_Option        = Input, 
                  Stamp        : _type_Basket_init_Stamp         = Select,
                  **kwargs):
         
         super_cls = self.__class__.__mro__[1]
+
+        axis = _helpers.get_function_arg_safe(super_cls, 'axis', kwargs)
+        axis_refl = int(not axis)
+
+        if axis:
+            kwargs.setdefault('delimit', ' ')
 
         if options is _helpers.auto:
             options = ()
@@ -1333,23 +1354,25 @@ class Basket(BaseList):
         if not search is None:
             search = functools.partial(search, get = _Basket_search_get)
 
+        axis_events = _Basket_directional_events[axis]
+
         stamp_handle = _handle.Handle()
 
-        def _control_function_arrow_horizontal(forward, info):
+        def _control_function_arrow(forward, info):
             cur_tile = self._mutate.cur_tile
             cur_spot = cur_tile.mutate.cur_tile.mutate.cur_spot
-            cur_mark = cur_spot[1]
+            cur_mark = cur_spot[axis_refl]
             if not (forward and cur_mark or not forward and not cur_mark):
                 return
             for oth_spot in self._mutate.vision.values():
                 oth_tile = self._mutate.tiles[oth_spot]
                 if oth_tile is cur_tile:
                     continue
-                oth_tile.mutate.cur_tile.mutate.point[1] = cur_mark
+                oth_tile.mutate.cur_tile.mutate.point[axis_refl] = cur_mark
             raise _handle.Abort()
         
-        for (event, forward) in ((_core.Event.arrow_right, True), (_core.Event.arrow_left, False)):
-            partial = functools.partial(_control_function_arrow_horizontal, forward)
+        for event_index, event in enumerate(axis_events):
+            partial = functools.partial(_control_function_arrow, event_index)
             control = _controls.get((_handle.EventType.enter, event))(partial)
             stamp_handle.add(control)
 
@@ -1360,7 +1383,7 @@ class Basket(BaseList):
             stamp_widget_index = int(index in active)
             stamp_widget = Stamp(
                 options = stamp_widget_options, 
-                axis = 1, 
+                axis = axis_refl, 
                 index = stamp_widget_index,
                 view_max = 1, 
                 focus_color = None,
@@ -1372,9 +1395,10 @@ class Basket(BaseList):
             main_widget_tiles = (stamp_widget, value_widget)
             main_widget = BaseList(
                 tiles = main_widget_tiles, 
-                axis = 1, 
+                axis = 1,
                 focus = True,
-                focus_color = None
+                focus_color = None,
+                delimit = ' '
             )
             return main_widget
 
@@ -1387,18 +1411,21 @@ class Basket(BaseList):
             widget = get_widget(index, value)
             return widget
         
+        def focus(event):
+            return event in axis_events
+        
         super().__init__(
             *args,
             tiles  = tiles, 
             create = create, 
             search = search, 
-            focus  = _Basket_focus,
+            focus  = focus,
             **kwargs)
 
-    def _resolve(self):
+    def _produce(self):
 
         indexes = set()
-        for (spot, tile) in self._mutate.tiles.items():
+        for spot, tile in self._mutate.tiles.items():
             # row.mutate.stamp.mutate.cur_spot
             if not tile.mutate.cur_tile.mutate.cur_spot[1]:
                 continue
@@ -1410,8 +1437,8 @@ class Basket(BaseList):
 
 _type_Count_init_value   = typing.Union[int, float]
 _type_Count_init_rate    = typing.Union[int, float]
-_type_Count_init_convert = typing.Union[None, typing.Callable[[_type_Count_init_value], _type_Count_init_value]]
-_type_Count_init_decimal = typing.Union[None, bool]
+_type_Count_init_convert = typing.Union[typing.Callable[[_type_Count_init_value], _type_Count_init_value], None]
+_type_Count_init_decimal = typing.Union[bool, None]
 _type_Count_init_Numeric = Numeric
     
 
@@ -1497,7 +1524,7 @@ class Count(BaseList):
             **kwargs
         )
 
-    def _resolve(self):
+    def _produce(self):
 
         value_any = self._mutate.cur_tile.resolve()
         value_int = int(value_any)
@@ -1530,7 +1557,7 @@ def _DateTime_funnel_enter_arrange(axis, attrs, date_delimit, time_delimit, part
     stores = ([], [])
 
     for attr in attrs:
-        for (attr_group_index, attr_group) in enumerate(_DateTime_funnel_enter_arrange_attr_groups):
+        for attr_group_index, attr_group in enumerate(_DateTime_funnel_enter_arrange_attr_groups):
             if not attr in attr_group:
                 continue
             break
@@ -1712,10 +1739,10 @@ class DateTime(BaseList):
         
         return datetime
 
-    def _resolve(self):
+    def _produce(self):
 
         kwargs = {}
-        for (index, name) in enumerate(self._datetime_attrs):
+        for index, name in enumerate(self._datetime_attrs):
             spot = _get_mesh_spot(self._axis, index)
             tile = self._mutate.tiles[spot]
             value = tile.resolve()
@@ -1761,7 +1788,7 @@ class Form(BaseList):
                  *args, 
                  form = {},
                  Field = Input, 
-                 delimit = ': ',
+                 delimit = ':',
                  **kwargs):
         
         super_cls = self.__class__.__mro__[1]
@@ -1808,7 +1835,8 @@ class Form(BaseList):
                 tiles = tile_widgets,
                 focus = tile_focus,
                 focus_color = get_tile_evade_color(index),
-                evade_color = get_tile_focus_color(index)
+                evade_color = get_tile_focus_color(index),
+                delimit = ' '
             )
             return tile
         
@@ -1826,7 +1854,7 @@ class Form(BaseList):
             **kwargs
         )
 
-    def _resolve(self):
+    def _produce(self):
 
         form = {}
         for tile in self.mutate.tiles.values():

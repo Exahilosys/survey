@@ -89,15 +89,15 @@ _color_bit4_layer_indexes = {
 
 def _color_bit4_resolve(path):
 
-    (name, *rest) = path.split('.')
+    name, *rest = path.split('.')
 
     info = {'name': name}
 
     part = _color_bit4_info[name]
 
-    for (key, indexes) in (('light', _color_bit4_light_indexes), ('layer', _color_bit4_layer_indexes)):
+    for key, indexes in (('light', _color_bit4_light_indexes), ('layer', _color_bit4_layer_indexes)):
         try:
-            (name, *rest) = rest
+            name, *rest = rest
         except ValueError:
             break
         info[key] = name
@@ -115,7 +115,7 @@ def _color_bit4_get(fg_path, bg_path):
     default_light = _color_default_light
 
     store = []
-    for (part, default_layer) in ((fg_path, 'fg'), (bg_path, 'bg')):
+    for part, default_layer in ((fg_path, 'fg'), (bg_path, 'bg')):
         if part is None:
             continue
         name, *rest = part.split('.')

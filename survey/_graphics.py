@@ -343,24 +343,17 @@ class SpinProgress(Graphic):
         super().__init__(get, *args, **kwargs)
 
 
-_type_MultiLineProgressControl_init_total               = typing.Union[int, float]
-_type_MultiLineProgressControl_init_runes               = typing.List[str]
-_type_MultiLineProgressControl_init_color               = typing.Union[str, None]
-_type_MultiLineProgressControl_init_value               = typing.Union[int, float]
-_type_MultiLineProgressControl_init_deque_limit_size    = typing.Union[int, None]
-_type_MultiLineProgressControl_init_deque_limit_time    = typing.Union[int, None]
-_type_MultiLineProgressControl_init_info_value_template = str
-_type_MultiLineProgressControl_init_info_speed_template = str
-_type_MultiLineProgressControl_init_info_chron_template = str
-_type_MultiLineProgressControl_init_info_delimit        = str
-_type_MultiLineProgressControl_init_info_color          = _type_MultiLineProgressControl_init_color
-_type_MultiLineProgressControl_init_info_epilogue       = typing.Union[str, typing.Callable[['MultiLineProgressControl'], str]]
-_type_MultiLineProgressControl_init_info_extra          = typing.Union[str, typing.Callable[['MultiLineProgressControl'], str]]
-_type_MultiLineProgressControl_init_info_denominate     = typing.Union[typing.Callable[[_type_MultiLineProgressControl_init_value], typing.Tuple[float, str]], None]
+_type_MultiLineProgressControl_init_total      = typing.Union[int, float]
+_type_MultiLineProgressControl_init_value      = typing.Union[int, float]
+_type_MultiLineProgressControl_init_runes      = typing.List[str]
+_type_MultiLineProgressControl_init_color      = typing.Union[str, None]
+_type_MultiLineProgressControl_init_suffix     = typing.Union[str, typing.Callable[['MultiLineProgressControl'], str]]
+_type_MultiLineProgressControl_init_epilogue   = typing.Union[str, typing.Callable[['MultiLineProgressControl'], str]]
+_type_MultiLineProgressControl_init_denominate = typing.Union[typing.Callable[[_type_MultiLineProgressControl_init_value], typing.Tuple[float, str]], None]
 
-_type_MultiLineProgressControl_move_size             = _type_MultiLineProgressControl_init_value
+_type_MultiLineProgressControl_move_size = _type_MultiLineProgressControl_init_value
 
-_type_MultiLineProgressControl_get_line_width        = int
+_type_MultiLineProgressControl_get_line_width = int
 
 
 class MultiLineProgressControl:
@@ -370,41 +363,25 @@ class MultiLineProgressControl:
     
     :param total:
         The maximum expected amount of the internal value.
+    :param value:
+        The initial value.
     :param runes:
         The runes to cycle through for subdivisions of a character.
     :param color:
         The color of the line.
-    :param value:
-        The initial value.
-    :param deque_limit_size:
-        The maximum amount of information to hold in the deque.
-    :param deque_limit_time:
-        The maximum amount of time to preserve information in the deque for.
-    :param info_value_template:
-        The info template of the current and total value. 
-        
+    :param suffix:
+        Added after the line. The following placeholders may be used:
+
         - ``value`` is the current value. 
         - ``total`` is :paramref:`.total`.
-        - ``unit`` is from :paramref:`.denominate`.
-    :param info_speed_template:
-        The info template of the known move speed.
-        
+        - ``total_unit`` is from :paramref:`.denominate` on ``total``.
         - ``speed`` is the known moving rate of the value. 
-        - ``unit`` is from :paramref:`.denominate`.
-    :param info_chron_template:
-        The info template of the elapsed time and known remaining..
-        
+        - ``speed_unit`` is from :paramref:`.denominate` on ``speed``.
         - ``remain`` is the known time left until completion. 
         - ``elapse`` is the time spent since the first move.
-    :param info_delimit:
-        The text used to join all ``info_`` parts.
-    :param info_epilogue:
-        Used after the value has reached the total instead of the constructed info.
-    :param info_extra:
-        Added after the constructed info while it's still being used.
-    :param info_color:
-        The color to paint the info with (same as :param:`.color` if not specified).
-    :param info_denominate:
+    :param epilogue:
+        Used after the value has reached the total instead of the suffix.
+    :param denominate:
         Used to determine the desired denomination of the value (and speed) and its respective unit.
 
         For example, if speed is :code:`'1000 KB/s'`, then :code:`denominate(1000)` may return :code:`(1000, 'MB')` so that speed is shown as :code:`1000/1000 -> '1 MB/s'` 
@@ -412,72 +389,70 @@ class MultiLineProgressControl:
     |theme| :code:`.graphics.MultiLineProgressControl`
     """
     
-    __slots__ = ('_total', '_runes', '_color', '_value', '_deque',
-                 '_deque_limit_time', '_deque_first_time', 
-                 '_info_value_template', '_info_speed_template',
-                 '_info_chron_template', '_info_delimit', '_info_epilogue',
-                 '_info_extra', '_info_color', '_info_denominate')
+    __slots__ = ('_total', '_value', '_runes', '_color', '_suffix', 
+                 '_epilogue', '_denominate', '_init_time', '_last_time')
 
     @_theme.add('graphics.MultiLineProgressControl')
     def __init__(self, 
-                 total              : _type_MultiLineProgressControl_init_total,
-                 runes              : _type_MultiLineProgressControl_init_runes               = ('━',),
-                 color              : _type_MultiLineProgressControl_init_color               = None,
-                 value              : _type_MultiLineProgressControl_init_value               = 0,
-                 deque_limit_size   : _type_MultiLineProgressControl_init_deque_limit_size    = 9999,
-                 deque_limit_time   : _type_MultiLineProgressControl_init_deque_limit_time    = 3,
-                 info_value_template: _type_MultiLineProgressControl_init_info_value_template = '{value}/{total}{unit}',
-                 info_speed_template: _type_MultiLineProgressControl_init_info_speed_template = '{speed}{unit}/s',
-                 info_chron_template: _type_MultiLineProgressControl_init_info_chron_template = '{remain}',
-                 info_delimit       : _type_MultiLineProgressControl_init_info_delimit        = ' ',
-                 info_epilogue      : _type_MultiLineProgressControl_init_info_epilogue       = None,
-                 info_extra         : _type_MultiLineProgressControl_init_info_extra          = None,
-                 info_color         : _type_MultiLineProgressControl_init_info_color          = _helpers.auto,
-                 info_denominate    : _type_MultiLineProgressControl_init_info_denominate     = None):
+                 total     : _type_MultiLineProgressControl_init_total,
+                 value     : _type_MultiLineProgressControl_init_value      = 0,
+                 runes     : _type_MultiLineProgressControl_init_runes      = ('━',),
+                 color     : _type_MultiLineProgressControl_init_color      = None,
+                 suffix    : _type_MultiLineProgressControl_init_suffix     = '{value}/{total}{total_unit} {speed}{speed_unit}/s {remain}',
+                 epilogue  : _type_MultiLineProgressControl_init_epilogue   = None,
+                 denominate: _type_MultiLineProgressControl_init_denominate = None):
         
-        if info_color is _helpers.auto:
-            info_color = color
-
-        if info_denominate is None:
-            info_denominate = lambda value: (1, '')
+        if denominate is None:
+            denominate = lambda value: (1, '')
 
         self._total = total
-        self._runes = runes
-        self._color = color
-
         self._value = value
 
-        self._deque = collections.deque(maxlen = deque_limit_size)
-        self._deque_limit_time = deque_limit_time
-        self._deque_first_time = None
+        self._runes = runes
+        self._color = color
+        self._suffix = suffix
+        self._epilogue = epilogue
+        self._denominate = denominate
 
-        self._info_value_template = info_value_template
-        self._info_speed_template = info_speed_template
-        self._info_chron_template = info_chron_template
-        self._info_delimit = info_delimit
-        self._info_epilogue = info_epilogue
-        self._info_extra = info_extra
-        self._info_color = info_color
-        self._info_denominate = info_denominate
+        self._init_time = None
+        self._last_time = None
+
+    @property
+    def total(self) -> _type_MultiLineProgressControl_init_total:
+
+        """
+        The total value.
+        """
+
+        return self._total
         
     @property
     def value(self) -> _type_MultiLineProgressControl_init_value:
         
         """
-        The internal value.
+        The current value.
         """
 
         return self._value
     
     @property
-    def deque(self) -> typing.Container[typing.Tuple[float, _type_MultiLineProgressControl_init_value]]:
-        
+    def init_time(self):
+
         """
-        The internal queue with ``(timestamp, addition)`` pairs.
+        The time spot of the first value.
         """
 
-        return self._deque
+        return self._init_time
     
+    @property
+    def last_time(self):
+
+        """
+        The time spot of the final value.
+        """
+
+        return self._last_time
+
     def move(self, 
              size: _type_MultiLineProgressControl_move_size):
         
@@ -487,33 +462,13 @@ class MultiLineProgressControl:
         :param size:
             The amount to move it by.
         """
-        
-        new_size = size
 
-        new_time = time.perf_counter()
-        
-        if self._deque_first_time is None:
-            self._deque_first_time = new_time
-        
-        self._value += new_size
+        last_time = self._last_time = time.perf_counter()
 
-        spot = (new_time, new_size)
+        if self._init_time is None:
+            self._init_time = last_time
         
-        for _ in range(2):
-            try:
-                self._deque.append(spot)
-            except IndexError:
-                self._deque.popleft()
-                
-        if self._deque_limit_time is None:
-            return
-        
-        while self._deque:
-            old_spot = self._deque[0]
-            dif_time = new_time - old_spot[0]
-            if dif_time < self._deque_limit_time:
-                break
-            self._deque.popleft()
+        self._value += size
 
     def get_line(self, 
                  width: _type_MultiLineProgressControl_get_line_width) -> str:
@@ -542,75 +497,43 @@ class MultiLineProgressControl:
 
         return result
     
-    def _get_info_made_parts(self):
-
-        total_deno, total_unit = self._info_denominate(self._total)
-
-        value_prop = self._value / total_deno
-        value_text = '{0:.0f}'.format(value_prop)
-
-        total_prop = self._total / total_deno
-        total_text = '{0:.0f}'.format(total_prop)
-        
-        yield self._info_value_template.format(value = value_text, total = total_text, unit = total_unit)
-        
-        if not self._deque:
-            return
-        
-        old_time, old_size = self._deque[0]
-        
-        new_size = 0
-        for new_time, sub_size in self._deque:
-            new_size += sub_size
-        
-        elapse = new_time - self._deque_first_time
-        elapse_text = _helpers.format_seconds(elapse, depth = 2)
-        
-        remain_time = new_time - old_time
-        remain_size = new_size - old_size
-        
-        try:
-            speed = remain_size / remain_time
-        except ZeroDivisionError:
-            speed = 0
-
-        try:
-            remain = max((self._total - self._value) / speed, 0)
-        except ZeroDivisionError:
-            remain_text = '??:??'
-        else:
-            remain_text = _helpers.format_seconds(remain, depth = 2)
-
-        speed_deno, speed_unit = self._info_denominate(speed)
-        speed = speed / speed_deno
-        speed_text = f'{{0:.2f}}'.format(speed)
-        
-        yield self._info_speed_template.format(speed = speed_text, unit = speed_unit)
-        
-        yield self._info_chron_template.format(elapse = elapse_text, remain = remain_text)
-        
     def _get_info_made(self):
-        
-        info_parts = self._get_info_made_parts()
-        info_parts = list(info_parts)
-        
-        info_extra = _helpers.get_or_call(self._info_extra, self)
 
-        if not info_extra is None:
-            info_parts.append(info_extra)
+        if self._init_time is None:
+            return None
+
+        suffix = _helpers.get_or_call(self._suffix, self)
+
+        if suffix is None:
+            return None
+
+        total_deno, total_unit = self._denominate(self._total)
+
+        total_text = f'{self._total / total_deno:0.0f}'
+        value_text = f'{self._value / total_deno:0.0f}'
         
-        info = self._info_delimit.join(info_parts)
-        
-        return info
+        elapse = time.perf_counter() - self._init_time
+        elapse_text = _helpers.format_seconds(elapse, depth = 2)
+
+        speed = self._value / elapse
+        speed_deno, speed_unit = self._denominate(speed)
+        speed_text = f'{speed / speed_deno:0.2f}'
+
+        remain = (self._total - self._value) / speed
+        remain_text = _helpers.format_seconds(remain, depth = 2)
+
+        return suffix.format(
+            value = value_text, total = total_text, total_unit = total_unit,
+            speed = speed_text, speed_unit = speed_unit, 
+            elapse = elapse_text, remain = remain_text
+        )
     
     def _get_info_done(self):
         
-        epilogue = self._info_epilogue
+        epilogue = _helpers.get_or_call(self._epilogue, self)
         
         if epilogue is None:
             return self._get_info_made()
-        
-        epilogue = _helpers.get_or_call(epilogue, self)
         
         return epilogue
     
@@ -620,8 +543,9 @@ class MultiLineProgressControl:
             info = self._get_info_made()
         else:
             info = self._get_info_done()
-        
-        info = _helpers.paint_text(self._info_color, info)
+
+        if not info is None:
+            info = _helpers.paint_text(self._color, info)
         
         return info
     
@@ -643,9 +567,10 @@ def _get_MultiLineProgress_prefix(self):
 
 
 @_theme.add('graphics.LineProgress.suffix')
-def _get_MultiLineProgress_suffix(progress, delimit = ' | '):
+def _get_MultiLineProgress_suffix(progress, delimit = ' '):
     
     infos = (control.get_info() for control in progress.controls)
+    infos = (info for info in infos if not info is None)
     
     return ' ' + delimit.join(infos)
 
@@ -678,14 +603,10 @@ class MultiLineProgress(Graphic):
     .. code-block:: python
 
         total = 1600
-        stages = {total * 1/4: 'stage 1', total * 2/4: 'stage 2', total * 3/4: 'stage 3'}
-        # after each threshold, display the respective "stage"
-        info_extra = lambda control: next((title for value, title in sorted(stages.items(), reverse = True) if control.value > value), None)
-        # initialize the different "controls", each can be used completely separately to advance its respective line
         controls = [
-            survey.graphics.MultiLineProgressControl(total, color = survey.colors.basic('blue' ), info_epilogue = 'done!'),
-            survey.graphics.MultiLineProgressControl(total, color = survey.colors.basic('red'  ), info_extra    = info_extra),
-            survey.graphics.MultiLineProgressControl(total, color = survey.colors.basic('green'), info_epilogue = lambda context: 'dynamic done!')
+            survey.graphics.MultiLineProgressControl(total, color = survey.colors.basic('blue' ), epilogue = 'done!'),
+            survey.graphics.MultiLineProgressControl(total, color = survey.colors.basic('red'  )),
+            survey.graphics.MultiLineProgressControl(total, color = survey.colors.basic('green'), epilogue = lambda context: 'dynamic done!')
         ]
         # lower-index controls take longer to iterate, but speed up as the higher-index controls complete 
         with survey.graphics.MultiLineProgress(controls, prefix = 'Loading '):
@@ -721,15 +642,12 @@ class MultiLineProgress(Graphic):
         self._controls = controls
 
         def get(*args):
-            rest_infos = []
-            for control in controls:
-                text = control.get_line(width)
-                rest_line = _helpers.split_line(text)
-                rest_time = control.deque[-1][0] if control.deque else 0
-                rest_infos.append((rest_line, rest_time))
             main_line = list(empty * width)
-            rank = lambda info: (len(info[0]), - info[1])
-            for rest_line, _ in sorted(rest_infos, key = rank, reverse = True):
+            controls = (control for control in self._controls if not control.init_time is None)
+            rank = lambda control: (control.value / control.total, - control.last_time)
+            for control in sorted(controls, key = rank, reverse = True):
+                rest_text = control.get_line(width)
+                rest_line = _helpers.split_line(rest_text)
                 main_line[0:len(rest_line)] = rest_line
             return prefix_wall + ''.join(main_line) + suffix_wall
         
@@ -768,14 +686,14 @@ class LineProgress(MultiLineProgress):
 
         total = 1600
         numbers = list(range(total))
-        for number in survey.graphics.LineProgress.from_iterable(numbers, prefix = 'Loading ', info_epilogue = 'done!'):
+        for number in survey.graphics.LineProgress.from_iterable(numbers, prefix = 'Loading ', epilogue = 'done!'):
             time.sleep(0.01)
 
     .. code-block:: python
 
         total = 1600
         numbers = list(range(total))
-        with survey.graphics.LineProgress(len(numbers), prefix = 'Loading ', info_epilogue = 'done!') as progress:
+        with survey.graphics.LineProgress(len(numbers), prefix = 'Loading ', epilogue = 'done!') as progress:
             for number in numbers:
                 time.sleep(0.01)
                 progress.move(1)
@@ -856,7 +774,7 @@ class LineProgress(MultiLineProgress):
         def denominate(value):
             for power, unit in reversed(tuple(enumerate(units))):
                 ratio = basic ** power
-                check = total / ratio
+                check = value / ratio / 10
                 if check > 1:
                     break
             return (ratio, unit)
@@ -864,7 +782,7 @@ class LineProgress(MultiLineProgress):
         def count(data):
             return len(data)
 
-        return cls.from_iterable(iterable, *args, total = total, info_denominate = denominate, count = count, **kwargs) 
+        return cls.from_iterable(iterable, *args, total = total, denominate = denominate, count = count, **kwargs) 
         
     def _move(self, size):
         

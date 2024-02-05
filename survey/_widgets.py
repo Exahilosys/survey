@@ -847,7 +847,8 @@ class Inquire(AutoSubmit):
 
         value = super()._prepare(value)
 
-        value = self._options[value]
+        if value in self._options:
+            value = self._options[value]
 
         return value
     

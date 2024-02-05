@@ -125,7 +125,8 @@ class Widget:
 
         if value is self._product_mark:
             value = self._produce()
-            value = self._prepare(value)
+
+        value = self._prepare(value)
 
         return value
     

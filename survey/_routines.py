@@ -206,7 +206,8 @@ def _inquire_reply(widget,
                    result, 
                    color = _colors.basic('cyan')):
 
-    result = 'Yes' if result else 'No'
+    if isinstance(result, bool):
+        result = 'Yes' if result else 'No'
 
     result = _helpers.paint_text(color, result)
 

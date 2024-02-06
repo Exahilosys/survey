@@ -206,7 +206,7 @@ def _inquire_reply(widget,
                    result, 
                    color = _colors.basic('cyan')):
 
-    result = 'Yes' if result else 'No'
+    result = ('Yes' if result else 'No') if isinstance(result, bool) else str(result)
 
     result = _helpers.paint_text(color, result)
 
@@ -250,7 +250,7 @@ def _inquire(*args,
 
     if not 'hint' in kwargs:
         hint_transform = lambda value: _helpers.paint_text(default_color, value.title())
-        hint_segments = (hint_transform(option) if option == default_option else option for option in options)
+        hint_segments = (hint_transform(option) if option == default_option else option for option in options if option)
         hint = kwargs['hint'] = '(' + '/'.join(hint_segments) + ')' + ' '
 
     multi_pre = False

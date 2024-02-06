@@ -111,10 +111,6 @@ class Widget:
 
         return self._mutate
     
-    def _prepare(self, value):
-
-        return value
-    
     def _produce(self):
 
         raise NotImplemented()
@@ -125,7 +121,6 @@ class Widget:
 
         if value is self._product_mark:
             value = self._produce()
-            value = self._prepare(value)
 
         return value
     
@@ -701,13 +696,12 @@ class Conceal(Input):
         super().__init__(*args, funnel_leave = funnel_leave, **kwargs)
 
 
-_type_AutoSubmit_init_evaluate  = typing.Callable[[str], None]
-_type_AutoSubmit_init_validate  = typing.Callable[[str], bool]
-_type_AutoSubmit_init_default   = typing.Any
-_type_AutoSubmit_init_transform = typing.Union[typing.Callable[[str], str], None]
+_type_AutoSubmitBase_init_evaluate  = typing.Callable[[str], None]
+_type_AutoSubmitBase_init_validate  = typing.Callable[[str], bool]
+_type_AutoSubmitBase_init_transform = typing.Union[typing.Callable[[str], str], None]
 
 
-class AutoSubmit(Input):
+class AutoSubmitBase(Input):
 
     """
     A text editor that automatically submits a upon valid insertion.
@@ -718,8 +712,6 @@ class AutoSubmit(Input):
         Used with ``(result)`` before insertion, which can be prevented by raising :exc:`.Abort` (like :paramref:`.Widget.validate`).
     :param validate:
         Used with ``(result)`` after to decide whether to submit (should return :cls:`bool`).
-    :param default:
-        Used instead when attempting to submit without a value.
     :param transform:
         Used with ``(result)`` and should return a new ``result`` used for checks.
 
@@ -730,14 +722,11 @@ class AutoSubmit(Input):
 
     __slots__ = ()
 
-    _default_mark = _helpers.auto
-
     def __init__(self, 
-                 evaluate : _type_AutoSubmit_init_evaluate,
-                 validate : _type_AutoSubmit_init_validate,
+                 evaluate : _type_AutoSubmitBase_init_evaluate,
+                 validate : _type_AutoSubmitBase_init_validate,
                  *args,
-                 default  : _type_AutoSubmit_init_default   = _default_mark, 
-                 transform: _type_AutoSubmit_init_transform = None,
+                 transform: _type_AutoSubmitBase_init_transform = None,
                  **kwargs):
         
         super_cls = self.__class__.__mro__[1]
@@ -746,13 +735,20 @@ class AutoSubmit(Input):
     
         handle = _handle.Handle()
 
+        def _predicate():
+            value = super(AutoSubmit, self)._produce()
+            if not transform is None:
+                value = transform(value)
+            evaluate(value)
+            if not validate(value):
+                return
+            self._product = value
+            raise _core.Terminate()
+
         @handle.add
         @_controls.get((_handle.EventType.enter, _core.Event.enter))
         def _control_submit_enter(info):
-            if _helpers.check_lines(self._mutate.lines) or default is self._default_mark:
-                raise Abort(None)
-            self._product = default
-            raise _core.Terminate()
+            _predicate()
 
         _state = NotImplemented
         
@@ -765,17 +761,10 @@ class AutoSubmit(Input):
         @handle.add
         @_controls.get((_handle.EventType.leave, _core.Event.insert))
         def _control_insert_leave(info):
-            value = super(AutoSubmit, self)._produce()
-            if not transform is None:
-                value = transform(value)
             try:
-                evaluate(value)
+                _predicate()
             except Abort:
                 self._mutate.set_state(_state); raise
-            if not validate(value):
-                return
-            self._product = value
-            raise _core.Terminate()
         
         callback = _helpers.chain_functions(callback, handle.invoke)
 
@@ -787,16 +776,16 @@ class AutoSubmit(Input):
         )
             
 
-_type_Inquire_init_options  = typing.Dict[str, typing.Any]
-_type_Inquire_init_tranform = _type_AutoSubmit_init_transform
+_type_AutoSubmit_init_options  = list[str]
+_type_AutoSubmit_init_tranform = _type_AutoSubmitBase_init_transform
     
 
-class Inquire(AutoSubmit):
+class AutoSubmit(AutoSubmitBase):
 
     """
-    A text editor that submits upon insertion of an option.
+    A text editor that submits upon insertion of a valid option.
 
-    Resolves into the value of the matching option.
+    Resolves into the respective option.
 
     :param options:
         The possible options. Attempting to insert a rune that does not lead to an option is forbidden. 
@@ -808,22 +797,22 @@ class Inquire(AutoSubmit):
         - :paramref:`~.AutoSubmit.evaluate` - Created using :paramref:`.options`.
         - :paramref:`~.AutoSubmit.validate` - Created using :paramref:`.options`.
 
-    |theme| :code:`'widgets.Inquire'`.
+    |theme| :code:`'widgets.AutoSubmit'`.
     """
 
-    __slots__ = ('_options',)
+    __slots__ = ()
 
-    @_theme.add('widgets.Inquire')
+    @_theme.add('widgets.AutoSubmit')
     def __init__(self, 
+                 options  : _type_AutoSubmit_init_options, 
                  *args,
-                 options  : _type_Inquire_init_options  = {'y': True, 'n': False}, 
-                 transform: _type_Inquire_init_tranform = str.lower,
+                 transform: _type_AutoSubmit_init_tranform = str.lower,
                  **kwargs):
 
         if not transform is None:
-            options = dict(zip(map(transform, options), options.values()))
+            options = map(transform, options)
 
-        self._options = options
+        options = tuple(set(options))
         
         def evaluate(value):
             for option in options:
@@ -837,20 +826,64 @@ class Inquire(AutoSubmit):
         super().__init__(
             evaluate, 
             validate, 
-            *args, 
+            *args,
             transform = transform,
             **kwargs
         )
 
-    def _prepare(self, value):
 
-        value = super()._prepare(value)
+_type_Inquire_init_options = typing.Dict[str, typing.Any]
+_type_Inquire_init_default = typing.Any
 
-        value = self._options[value]
+class Inquire(AutoSubmit):
 
-        return value
+    """
+    A text editor that submits upon insertion of a valid option.
+
+    Resolves into the value of the matching option.
+
+    :param options:
+        The possible options and their respective values.
+    :param default:
+        Used instead when attempting to submit without an option.
+
+    Arguments directly passed to super-class:
     
-    
+        - :paramref:`~.AutoSubmit.options` - Created using :paramref:`.options` and :paramref:`.default`.
+
+    |theme| :code:`'widgets.Inquire'`.
+    """
+
+    __slots__ = ('_options',)
+
+    _default_rune = ''
+    _default_mark = object()
+
+    @_theme.add('widgets.Inquire')
+    def __init__(self,
+                 *args,
+                 options: _type_Inquire_init_options = {'y': True, 'n': False},
+                 default: _type_Inquire_init_default = _default_mark,
+                 **kwargs):
+        
+        if not default is self._default_mark:
+            options[''] = default
+
+        self._options = options
+
+        super().__init__(
+            options,
+            *args,
+            **kwargs
+        )
+
+    def _resolve(self):
+
+        option = super()._resolve()
+
+        return self._options[option]
+
+
 def _focus_nil(spot):
 
     return False

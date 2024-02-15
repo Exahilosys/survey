@@ -776,7 +776,7 @@ class AutoSubmitBase(Input):
         )
             
 
-_type_AutoSubmit_init_options  = list[str]
+_type_AutoSubmit_init_options  = typing.List[str]
 _type_AutoSubmit_init_tranform = _type_AutoSubmitBase_init_transform
     
 

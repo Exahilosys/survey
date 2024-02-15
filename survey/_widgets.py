@@ -815,9 +815,12 @@ class AutoSubmit(AutoSubmitBase):
         options = tuple(set(options))
         
         def evaluate(value):
-            for option in options:
-                if option.startswith(value):
-                    return
+            if value:
+                for option in options:
+                    if option.startswith(value):
+                        return
+            elif value in options:
+                return
             raise Abort(None)
         
         def validate(value):

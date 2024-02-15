@@ -333,13 +333,17 @@ def _start(multi_pre : _type_start_multi_pre,
         Called upon successful submission with ``(widget, result)``. Should return a class:`str` that is used as a response.
     """
 
-    if not show is None:
-        if not mark is None:
-            if mark_color:
-                mark = _helpers.paint_text(mark_color, mark)
-            show = mark + show
-        show_get = _start_get_actor_static(True, show)
-        _system.screen.print(show_get, False, learn = False)
+    if show is None:
+        show = ''
+
+    if not mark is None:
+        if mark_color:
+            mark = _helpers.paint_text(mark_color, mark)
+        show = mark + show
+
+    show_get = _start_get_actor_static(True, show)
+    
+    _system.screen.print(show_get, False, learn = False)
 
     if info is None:
         info = ''

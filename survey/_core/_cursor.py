@@ -77,6 +77,11 @@ class Cursor:
         self._lock = threading.RLock()
 
     @property
+    def intel(self):
+
+        return self._intel
+
+    @property
     def hidden(self):
 
         """
@@ -89,6 +94,10 @@ class Cursor:
         """
 
         return self._hidden
+    
+    def _send_direct(self, text):
+
+        self._intel.io.send(text)
 
     def _send(self, *args, escape = False, **kwargs):
 
@@ -96,7 +105,7 @@ class Cursor:
 
         value = function(*args, **kwargs)
 
-        self._intel.send(value)
+        self._send_direct(value)
 
     def _up(self, size):
 
@@ -328,12 +337,13 @@ class Cursor:
     _max_y = _max_x = 9999
 
     @_helpers.ctxmethod(lambda self: self._lock)
+    @_helpers.ctxmethod(lambda self: self._intel.io)
     def _measure(self):
 
         self._save()
 
         self._move(self._max_y, self._max_x)
-
+            
         point = self._locate()
 
         self._load()

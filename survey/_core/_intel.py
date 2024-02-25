@@ -26,6 +26,11 @@ class Intel:
         self._rune_buffer = []
         self._code_buffer = []
 
+    @property
+    def io(self):
+
+        return self._io
+
     def _fill_text(self):
 
         if self._rune_buffer:
@@ -92,10 +97,3 @@ class Intel:
 
         return self._read(check)
     
-    def _send(self, text):
-
-        self._io.send(text)
-
-    def send(self, text):
-
-        self._send(text)

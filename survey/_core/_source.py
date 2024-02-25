@@ -79,6 +79,11 @@ class Source:
 
         self._lock = threading.RLock()
 
+    @property
+    def intel(self):
+
+        return self._intel
+
     _group = {
         EventType.control: {
             '\x7f': Event.delete_left,

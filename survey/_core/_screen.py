@@ -23,19 +23,22 @@ class Screen:
         Used for hidding the cursor between draws.
     """
 
-    __slots__ = ('_cursor', '_render', '_lock')
+    __slots__ = ('_render', '_lock')
 
     def __init__(self, 
-                 render: _render.Render, 
-                 cursor: _cursor.Cursor):
-
-        self._cursor = cursor
+                 render: _render.Render):
+        
         self._render = render
 
         self._lock = threading.Lock()
 
+    @property
+    def render(self):
+
+        return self._render
+
     @_helpers.ctxmethod(lambda self: self._lock)
-    @_helpers.ctxmethod(lambda self: self._cursor.hidden)
+    @_helpers.ctxmethod(lambda self: self._render.cursor.hidden)
     def _print(self, sketch, re, **kwargs):
 
         if re:

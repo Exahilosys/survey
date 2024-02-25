@@ -19,15 +19,15 @@ _intel = intel = _core.Intel(_io)
 
 #:
 _handle = handle = _core.Handle(_intel)
-
+ 
 #:
 _cursor = cursor = _core.Cursor(_intel)
 
 #:
-_render = render = _core.Render(_cursor, _intel)
+_render = render = _core.Render(_cursor)
 
 #:
-_screen = screen = _core.Screen(_render, _cursor)
+_screen = screen = _core.Screen(_render)
 
 #:
 _console = console = _core.Console(_handle, _screen)

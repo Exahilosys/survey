@@ -32,6 +32,11 @@ class Handle:
 
         self._intel = intel
 
+    @property
+    def intel(self):
+
+        return self._intel
+
     def _start(self, invoke):
 
         source = _source.Source(invoke, self._intel)

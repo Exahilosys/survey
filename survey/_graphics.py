@@ -54,8 +54,8 @@ class Interface:
 
         io = _system.io
         cursor = _system.cursor
-        render = _core.Render(cursor, io)
-        screen = _core.Screen(render, cursor)
+        render = _core.Render(cursor)
+        screen = _core.Screen(render)
 
         self._io = io
         self._cursor = cursor

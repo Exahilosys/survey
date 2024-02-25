@@ -120,26 +120,15 @@ class Render:
 
     _style_reset = _ansi.get_control('m', 0)
 
-    __slots__ = ('_intel', '_cursor', '_memory', '_lock')
+    __slots__ = ('_cursor', '_memory', '_lock')
 
     def __init__(self,
-                 cursor: _cursor.Cursor, 
-                 intel: _intel.Intel):
+                 cursor: _cursor.Cursor):
 
-        self._intel = intel
         self._cursor = cursor
         self._memory = None
         
         self._lock = threading.Lock()
-    
-    @property
-    def intel(self) -> _intel.Intel:
-
-        """
-        The intel used for sending text.
-        """
-
-        return self._intel
     
     @property
     def cursor(self) -> _cursor.Cursor:
@@ -158,14 +147,18 @@ class Render:
         """
 
         return self._memory
+    
+    def _send_direct(self, text):
+
+        self._cursor.intel.io.send(text)
 
     def _send(self, clean, lines):
         
         for index, line in enumerate(lines):
             if index:
-                self._intel.send(_constants.linesep)
+                self._send_direct(_constants.linesep)
             text = ''.join(line)
-            self._intel.send(text)
+            self._send_direct(text)
             if clean:
                 self._cursor.erase()
 
@@ -189,7 +182,7 @@ class Render:
         cur_y, cur_x = self._cursor.locate()
         max_y, max_x = self._cursor.measure()
 
-        self._intel.send(self._style_reset)
+        self._send_direct(self._style_reset)
 
         self._send(True, lines)
 

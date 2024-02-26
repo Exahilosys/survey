@@ -308,6 +308,7 @@ class Cursor:
         self._show()
 
     @_helpers.ctxmethod(lambda self: self._lock)
+    @_helpers.ctxmethod(lambda self: self._intel.io)
     def _locate(self):
 
         self._send('n', '6')
@@ -337,7 +338,6 @@ class Cursor:
     _max_y = _max_x = 9999
 
     @_helpers.ctxmethod(lambda self: self._lock)
-    @_helpers.ctxmethod(lambda self: self._intel.io)
     def _measure(self):
 
         self._save()

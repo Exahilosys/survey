@@ -89,7 +89,9 @@ class Source:
             '\x7f': Event.delete_left,
             '\x08': Event.delete_right,
             '\x0d': Event.enter,
-            '\x09': Event.indent
+            '\x09': Event.indent,
+            '\x10': Event.arrow_up,
+            '\x0E': Event.arrow_down
         },
         EventType.escape: {
             '': Event.escape

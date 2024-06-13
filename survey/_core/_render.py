@@ -4,6 +4,7 @@ import functools
 import dataclasses
 import threading
 import weakref
+import unicodedata
 
 from . import _helpers
 from . import _constants
@@ -153,7 +154,7 @@ class Render:
         self._cursor.intel.io.send(text)
 
     def _send(self, clean, lines):
-        
+
         for index, line in enumerate(lines):
             if index:
                 self._send_direct(_constants.linesep)
@@ -182,6 +183,20 @@ class Render:
         cur_y, cur_x = self._cursor.locate()
         max_y, max_x = self._cursor.measure()
 
+        if not point is None:
+            for rune in lines[point[0]][:point[1]]:
+                try:
+                    iuni = unicodedata.east_asian_width(rune)
+                except TypeError:
+                    continue
+                cur_x += iuni in ('W', 'A', 'F')
+
+        memory = Memory(cur_y, cur_x)
+
+        if learn:
+            self._memory = memory
+            self._history.add(memory)
+
         self._send_direct(self._style_reset)
 
         self._send(True, lines)
@@ -190,12 +205,6 @@ class Render:
             self._cursor.clear()
 
         sizes = list(map(len, lines))
-
-        memory = Memory(cur_y, cur_x)
-
-        if learn:
-            self._memory = memory
-            self._history.add(memory)
 
         # adjust initial x
         sizes[0] += cur_x - 1

@@ -350,6 +350,7 @@ _type_Mesh_init_point  = _type_cursor_point
 _type_Mesh_init_score  = typing.Union[typing.Callable[[_type_Text_init_lines, _type_Mesh_init_tile], typing.Union[int, None]], None]
 _type_Mesh_init_scout  = typing.Union[typing.Callable[[_type_Mesh_init_spot], bool], None]
 _type_Mesh_init_rigid  = bool
+_type_Mesh_init_permit = bool
 _type_Mesh_init_create = typing.Union[typing.Callable[[_type_Mesh_init_spot], typing.Union[_type_Mesh_init_tile, None]], None]
 
 
@@ -364,6 +365,8 @@ class Mesh(Mutate):
         Determines whether a spot is valid to move to.
     :param rigid:
         Whether to **not** allow wraping around when moving toward the edge.
+    :param permit:
+        Whether to allow invalid runes to be added to the search lines.
     :param create:
         Used for creating tiles for new spots. Can return :code:`None` to prevent creation.
     :param tiles:
@@ -373,12 +376,14 @@ class Mesh(Mutate):
     """
 
     __slots__ = ('_create', '_scout', '_rigid', '_search_score', '_search_mutate', 
-                 '_vision', '_search_point_cache', '_clean', '_tiles', '_cursor')
+                 '_search_ignore', '_search_ignore_index', '_vision', 
+                 '_search_point_cache', '_clean', '_tiles', '_cursor')
 
     def __init__(self, 
                  score : _type_Mesh_init_score, 
                  scout : _type_Mesh_init_scout, 
                  rigid : _type_Mesh_init_rigid,
+                 permit: _type_Mesh_init_permit,
                  create: _type_Mesh_init_create, 
                  clean : _type_Mesh_init_clean,
                  tiles : _type_Mesh_init_tiles, 
@@ -399,6 +404,8 @@ class Mesh(Mutate):
 
         self._search_mutate = Text(search_lines, search_point)
         self._search_score = score
+        self._search_ignore = permit
+        self._search_ignore_index = 0
         self._vision = {spot: spot for spot in tiles}
         self._search_point_cache = None
 
@@ -531,6 +538,15 @@ class Mesh(Mutate):
         """
 
         return self._cur_tile
+    
+    @property
+    def search_ignore_index(self):
+
+        """
+        The current search ignore index.
+        """
+
+        return self._search_ignore_index
     
     def _get_state(self):
 
@@ -694,7 +710,7 @@ class Mesh(Mutate):
 
         if set(old_spots) == set(cur_spots):
             raise Error('inconsequential_search_argument', argument = argument)
-            
+        
         combos = _helpers.squeeze_spots(0, old_spots)
 
         self._vision = dict(map(reversed, combos))
@@ -729,9 +745,17 @@ class Mesh(Mutate):
                 point = self._search_execute_setup(argument)
             else:
                 point = self._search_execute_reset()
-        except Error:
+        except Error as error:
+            if self._search_ignore and error.text in ('invalid_search_argument', 'inconsequential_search_argument'):
+                if self._search_ignore_index is None: 
+                    self._search_ignore_index = _helpers.text_point_to_index(state.search.lines, *state.search.cursor.point)
+                return
             self._set_state(state)
             raise
+        else:
+            if not self._search_ignore_index is None:
+                self._search_ignore_index = None
+                # raise BaseException
 
         instructions = enumerate(point)
 

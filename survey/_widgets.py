@@ -913,6 +913,7 @@ def _get_mesh_spot(*args, **kwargs):
     return tuple(point)
 
 
+_type_BaseMesh_init_permit       = _mutates._type_Mesh_init_permit
 _type_BaseMesh_init_search       = _mutates._type_Mesh_init_score
 _type_BaseMesh_init_create       = _mutates._type_Mesh_init_create
 _type_BaseMesh_init_tiles        = _mutates._type_Mesh_init_tiles
@@ -983,6 +984,7 @@ class BaseMesh(Widget, controls = _BaseMesh_controls):
                  point       : _type_BaseMesh_init_point        = _helpers.auto, 
                  create      : _type_BaseMesh_init_create       = None,
                  search      : _type_BaseMesh_init_search       = _searches.fuzzy,
+                 permit      : _type_BaseMesh_init_permit       = False,
                  clean       : _type_BaseMesh_init_clean        = False,
                  scout       : _type_BaseMesh_init_scout        = None, 
                  rigid       : _type_BaseMesh_init_rigid        = False,
@@ -1007,7 +1009,7 @@ class BaseMesh(Widget, controls = _BaseMesh_controls):
             else:
                 point = list(point_spot)
 
-        mutate = _mutates.Mesh(search, scout, rigid, create, clean, tiles, point)
+        mutate = _mutates.Mesh(search, scout, rigid, permit, create, clean, tiles, point)
 
         def visual_get(*args):
             tiles = {}

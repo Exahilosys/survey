@@ -329,16 +329,29 @@ def paint_text(color, value, *args, **kwargs):
     return Graffity(color, value)
 
 
-def paint_line(color, line, *args, **kwargs):
+def paint_line(color, line, *args, enter = None, leave = None, **kwargs):
 
     for index, rune in enumerate(line):
+        if not enter is None and index < enter:
+            continue
+        if not leave is None and index > leave:
+            continue
         line[index] = paint_rune(color, rune, *args, **kwargs)
 
 
-def paint_lines(color, lines, *args, **kwargs):
+def paint_lines(color, lines, *args, enter_point = None, leave_point = None, **kwargs):
 
-    for line in lines:
-        paint_line(color, line, *args, **kwargs)
+    for index, line in enumerate(lines):
+        enter_index = leave_index = None
+        if not enter_point is None:
+            if index < enter_point[0]:
+                continue
+            enter_index = enter_point[1] if enter_point[0] == index else 0
+        if not leave_point is None:
+            if index > leave_point[0]:
+                continue
+            leave_index = leave_point[1] if leave_index[0] == index else sum(map(len, lines))
+        paint_line(color, line, *args, enter = enter_index, leave = leave_index, **kwargs)
 
 
 def merge_lines(main, *rest):

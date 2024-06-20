@@ -8,6 +8,7 @@ import os
 
 from . import _helpers
 from . import _colors
+from . import _visuals
 from . import _widgets
 from . import _theme
 
@@ -308,10 +309,14 @@ def _select_reply(widget,
 @_theme.add('routines.select')
 def _select(*args, 
             reply = _select_reply, 
+            insearch_color = _colors.basic('red'),
             **kwargs):
     
     """
     Use an :class:`~.widgets.Select` widget.
+
+    :param insearch_color:
+        Color for when :paramref:`._widgets.BaseMesh.permit` is ``True`` and the search is invalid or incosequential.
 
     The default hint shows available controls.
 
@@ -343,11 +348,24 @@ def _select(*args,
     kwargs.setdefault('hint', _select_hint)
     kwargs.setdefault('hint_parse', True)
 
+    def info_visual_get(enter, leave):
+        return (widget.mutate.search_lines, widget.mutate.search_point)
+    
+    info_funnel_leave_group = []
+    def info_funnel_leave_entry(lines, point):
+        index = widget.mutate.search_ignore_index
+        if index is None:
+            return
+        point = _helpers.text_index_to_point(lines, index)
+        _helpers.paint_lines(insearch_color, lines, enter_point = point)
+
+    info_funnel_leave_group.append(info_funnel_leave_entry)
+    info_funnel_leave = _helpers.chain_functions(*info_funnel_leave_group)
+
+    info_visual = _visuals.Text(info_visual_get, funnel_leave = info_funnel_leave)
+
     def info(widget, *args):
-        mutate = widget.mutate
-        lines = mutate.search_lines
-        point = mutate.search_point
-        return (lines, point)
+        return info_visual.get()
 
     multi_pre = True
     multi_aft = False
@@ -423,10 +441,14 @@ def _basket_reply(widget,
 @_theme.add('routines.basket')
 def _basket(*args, 
             reply = _basket_reply, 
+            insearch_color = _colors.basic('red'),
             **kwargs):
     
     """
     Use an :class:`~.widgets.Basket` widget.
+
+    :param insearch_color:
+        Color for when :paramref:`._widgets.BaseMesh.permit` is ``True`` and the search is invalid or incosequential.
 
     The default hint shows available controls.
 
@@ -462,11 +484,24 @@ def _basket(*args,
     kwargs.setdefault('hint', _basket_hint)
     kwargs.setdefault('hint_parse', True)
 
+    def info_visual_get(enter, leave):
+        return (widget.mutate.search_lines, widget.mutate.search_point)
+    
+    info_funnel_leave_group = []
+    def info_funnel_leave_entry(lines, point):
+        index = widget.mutate.search_ignore_index
+        if index is None:
+            return
+        point = _helpers.text_index_to_point(lines, index)
+        _helpers.paint_lines(insearch_color, lines, enter_point = point)
+
+    info_funnel_leave_group.append(info_funnel_leave_entry)
+    info_funnel_leave = _helpers.chain_functions(*info_funnel_leave_group)
+
+    info_visual = _visuals.Text(info_visual_get, funnel_leave = info_funnel_leave)
+
     def info(widget, *args):
-        mutate = widget.mutate
-        lines = mutate.search_lines
-        point = mutate.search_point
-        return (lines, point)
+        return info_visual.get()
 
     multi_pre = True
     multi_aft = False

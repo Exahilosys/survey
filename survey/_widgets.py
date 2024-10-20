@@ -1202,6 +1202,8 @@ class BaseList(BaseMesh, controls = _BaseList_controls):
             def funnel_enter_entry_get(index):
                 spot = _get_mesh_spot(axis, index)
                 tile = self._mutate.tiles.get(spot)
+                if not axis:
+                    index *= - 1
                 value = label(index, tile)
                 lines = _helpers.split_lines(value)
                 return lines

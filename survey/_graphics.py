@@ -582,6 +582,7 @@ _type_MultiLineProgress_init_prefix      = _type_init_Graphic_prefix
 _type_MultiLineProgress_init_suffix      = _type_init_Graphic_suffix
 _type_MultiLineProgress_init_prefix_wall = str
 _type_MultiLineProgress_init_suffix_wall = str
+_type_MultiLineProgress_init_stacked     = bool
 
 
 class MultiLineProgress(Graphic):
@@ -597,8 +598,10 @@ class MultiLineProgress(Graphic):
         The rune to fill empty space with.
     :param prefix_wall:
         Added before the line.
-    :param prefix_wall:
+    :param suffix_wall:
         Added after the line.
+    :param stacked
+        Whether to stack the lines.
 
     .. code-block:: python
 
@@ -637,6 +640,7 @@ class MultiLineProgress(Graphic):
                  suffix     : _type_MultiLineProgress_init_suffix      = _get_MultiLineProgress_suffix,
                  prefix_wall: _type_MultiLineProgress_init_prefix_wall = '|',
                  suffix_wall: _type_MultiLineProgress_init_suffix_wall = '|',
+                 stacked: _type_MultiLineProgress_init_stacked = False,
                  **kwargs):
         
         self._controls = controls
@@ -645,10 +649,12 @@ class MultiLineProgress(Graphic):
             main_line = list(empty * width)
             controls = (control for control in self._controls if not control.init_time is None)
             rank = lambda control: (control.value / control.total, - control.last_time)
+            prev = 0
             for control in sorted(controls, key = rank, reverse = True):
                 rest_text = control.get_line(width)
                 rest_line = _helpers.split_line(rest_text)
-                main_line[0:len(rest_line)] = rest_line
+                main_line[prev if stacked else 0:len(rest_line)] = rest_line
+                prev += len(rest_line)
             return prefix_wall + ''.join(main_line) + suffix_wall
         
         super().__init__(get, *args, prefix = prefix, suffix = suffix, **kwargs)
